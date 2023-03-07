@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
     try {
 
-        VirtualFPU fpu(VirtualFPU::DEFAULT_STACK_SIZE);
+        VirtualFPU fpu;
 
         fpu.defineVar(string("g"), 9.82);
         
@@ -31,13 +31,25 @@ int main(int argc, char** argv) {
       //  fpu.compile("-3*(g+8)");
         
        //  fpu.compile("1/3+2+7*5");
-        fpu.compile("5+6+4+(20-1+1)/5");
+        fpu.compile("6*g");
 
         //fpu.compile("6.55-2.2+1+2+3-4");
 
         cout << fpu.getRPNStack() << endl;
         
         cout<<"RESULT="<<fpu.evaluate()<<endl;
+        
+        fpu.defineVar("x",2);
+        fpu.compile("x*x");
+        cout << fpu.getRPNStack() << endl;
+        cout<<fpu.evaluate()<<endl;
+        
+        for (double x=-10;x<=10;x+=0.5)
+        {
+            fpu.defineVar("x",x);
+            cout<<x<<" -> "<<fpu.evaluate()<<endl;
+        }
+        
 
     } catch (VirtualFPUException &ex) {
 

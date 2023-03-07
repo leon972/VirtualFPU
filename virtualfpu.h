@@ -51,9 +51,10 @@ namespace virtualfpu {
     };
 
     struct StackItem {
+        
         Instruction instr;
-
         double value;
+        string defVar; 
 
         /**
          Converte da stringa ad operatore
@@ -181,16 +182,13 @@ namespace virtualfpu {
 
     protected:
 
-        /**
-         Dimensione dello stack
-         */
-        size_t stackSize;
+        
 
         //vettore usato come delegato dello stack, si usa un vettore per poter
         //esaminarne velocemente il contenuto
         vector<StackItem*> *instrVector;
 
-        stack<StackItem *, vector<StackItem*> > *instrStack;
+     //   stack<StackItem *, vector<StackItem*> > *instrStack;
 
         /**
          Definizione variabili

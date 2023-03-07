@@ -123,37 +123,26 @@ namespace virtualfpu {
 
     ////////////////////// VirtualFPU //////////////////////////////////////////////
 
-    /**
-     * 
-     * @param stackSize dimensione stack in "word" virtuali
-     */
-    VirtualFPU::VirtualFPU(size_t stackSize) : instrStack(0) {
-        init(stackSize);
-    }
+   
 
-    VirtualFPU::VirtualFPU() : instrStack(0) {
+    VirtualFPU::VirtualFPU() : instrVector(0) {
         init(DEFAULT_STACK_SIZE);
     }
 
     VirtualFPU::~VirtualFPU() {
-
-        if (instrStack) {
-
-            clearStack();
-            delete instrStack;
-            instrStack = 0;
-
-        }
-
+        
+          clearStack();
+        
         if (instrVector) {
             delete instrVector;
+            instrVector=nullptr;
         }
 
         if (defVars && !defVars->empty()) {
 
             defVars->clear();
             delete defVars;
-            defVars = 0;
+            defVars = nullptr;
 
         }
 
@@ -696,73 +685,7 @@ namespace virtualfpu {
                 delete executeStack[i];
             }
             throw VirtualFPUException(ss.str());
-        }
-
-
-        // try {
-        /**  while (
-                  .size()>1) {
-                
-              for (auto it=executeList.begin();it!=executeList.end();++it)
-              {
-                  StackItem *op1=*it;
-                  if (op1->instr!=VALUE)
-                  {
-                      throw new VirtualFPUException("Value was expected ad first list element");
-                  }
-                  StackItem *op2=*it;
-                  if (op2->instr!=VALUE)
-                  {
-                      StackItem *r=evaluateUnary(op1,op2);                        
-                      executeList.remove(op1);
-                      executeList.remove(op2);
-                        
-                  }
-                    
-              }
-                
-              op1 = executeList.top();
-              executeList.pop();
-              if (op1->instr != VALUE) {
-                  throw VirtualFPUException(string("Expected value for instruction operand 1"));
-              }
-              if (executeList.empty()) {
-                  throw VirtualFPUException(string("Unexpected end of stack"));
-              }
-              op2 = executeList.top();
-              executeList.pop();
-              if (op2->instr != VALUE) {
-                  StackItem *r=evaluateUnary(op1,op2);
-                  delete op1;op1=nullptr;
-                  delete op2;op2=nullptr;
-                  executeList.push(r);
-
-              } else {
-                  if (executeList.empty()) {
-                      throw VirtualFPUException(string("Unexpected end of stack"));
-                  }
-                  op3 = executeList.top();
-                  executeList.pop();
-                  StackItem *r=evaluateOperation(op1,op2,op3);
-                  delete op1;op1=nullptr;
-                  delete op2;op2=nullptr;
-                  delete op3;op3=nullptr;
-                  executeList.push(r);                                     
-
-              }                
-          }
-      } catch (VirtualFPUException &e) {
-          throw VirtualFPUException("Error evaluating expression:"s + e.getMessage());
-      }*/
-
-        /** StackItem* finalResult=executeList.top();
-         executeList.pop(); //now stack must be empty
-         double r=finalResult->value;
-         delete finalResult;finalResult=nullptr;
-         return r;        */
-
-
-
+        }   
     }
 
     StackItem* VirtualFPU::evaluateUnary(StackItem *operand, StackItem *operation) {
@@ -818,7 +741,7 @@ namespace virtualfpu {
      * @return 
      */
     size_t VirtualFPU::getStackSize() const {
-        return stackSize;
+        return instrVector->size();
     }
 
     /**
@@ -826,14 +749,14 @@ namespace virtualfpu {
      * @return 
      */
     size_t VirtualFPU::stackLength() const {
-        return instrStack->size();
+        return instrVector->size();
     }
 
     /**
      * Determina se lo stack è vuoto
      */
     bool VirtualFPU::stackIsEmpty() const {
-        return instrStack->empty();
+        return instrVector->empty();
     }
 
     /**
@@ -842,13 +765,14 @@ namespace virtualfpu {
      */
     void VirtualFPU::clearStack() {
 
-        if (instrStack && !instrStack->empty()) {
+        if (instrVector && instrVector->size()>0) {
 
-            while (!instrStack->empty()) {
-                delete instrStack->top();
-                instrStack->pop();
+            for (int i=0;i<instrVector->size();++i)
+            {
+                delete instrVector->at(i);                
             }
-
+            
+            instrVector->clear();
         }
     }
 
@@ -966,10 +890,7 @@ namespace virtualfpu {
         }
 
         instrVector = new vector<StackItem*>();
-
-        instrStack = new stack<StackItem*, vector<StackItem*> >(*instrVector);
-
-        this->stackSize = stackSize;
+       
 
         defVars = new map<string, double>();
 
