@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
       //  fpu.compile("-3*(g+8)");
         
        //  fpu.compile("1/3+2+7*5");
-        fpu.compile("3*(7*(6-2))");
+        fpu.compile("sin(2)");
 
         //fpu.compile("6.55-2.2+1+2+3-4");
 

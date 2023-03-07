@@ -20,7 +20,7 @@
 #include <vector>
 #include <cmath>
 #include <list>
-#include <format>
+
 
 using namespace std;
 
@@ -613,17 +613,26 @@ namespace virtualfpu {
             for (auto it = rpnEval->begin(); it < rpnEval->end(); ++it) {
                 StackItem *si = *it;
                 executeStack.push_back(si->clone());
-                while (reduceStack(&executeStack)) {
+                while (reduceStack(executeStack)) {
                 }
             }
 
             if (executeStack.size() == 1 && executeStack[0]->instr == VALUE) {
-                return executeStack[0]->value;
+
+                double r = executeStack[0]->value;
+                delete executeStack[0];
+                return r;
             } else {
                 throw new VirtualFPUException("Error evaluating expression.");
             }
-        }   catch (VirtualFPUException &e) {
-            throw new VirtualFPUException(std::format("Error :{}",e.getMessage()));
+        } catch (VirtualFPUException &e) {
+            stringstream ss;
+            ss << "Error:" << e.getMessage();
+            for (int i=0;i<executeStack.size();++i)
+            {
+                delete executeStack[i];
+            }
+            throw new VirtualFPUException(ss.str());
         }
 
 
