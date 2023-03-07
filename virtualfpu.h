@@ -232,6 +232,10 @@ namespace virtualfpu {
          * @return 
          */
         bool isOperator(const string& token);
+        
+        bool isOperator(const Instruction instr);
+        
+        bool isFunction(const string& token);
 
 
 

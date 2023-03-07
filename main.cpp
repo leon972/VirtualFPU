@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
         VirtualFPU fpu(VirtualFPU::DEFAULT_STACK_SIZE);
 
         fpu.defineVar(string("g"), 9.82);
+        
+        cout<<fpu.getVar("g")<<endl;
 
         //5,9,8,+,4,6,*,*,7,+,*
         //fpu.compile("5*(((9+8)*(4*6))+7)");
@@ -29,7 +31,7 @@ int main(int argc, char** argv) {
       //  fpu.compile("-3*(g+8)");
         
        //  fpu.compile("1/3+2+7*5");
-        fpu.compile("sin(2)");
+        fpu.compile("5+6+4+(20-1+1)/5");
 
         //fpu.compile("6.55-2.2+1+2+3-4");
 

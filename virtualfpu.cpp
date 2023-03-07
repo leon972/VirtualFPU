@@ -168,17 +168,20 @@ namespace virtualfpu {
             case VALUE:
                 return 0;
             case ADD:
-            case SUB:
-                return 1;
-            case MUL:
-            case DIV:
                 return 2;
+            case SUB:
+                return 3;
+            case MUL:
+                return 4;
+            case DIV:
+                return 5;
+            case UNARY_MINUS:
+                return 6;
             case COS:
             case SIN:
             case SQRT:
-                return 3;
-            case UNARY_MINUS:
-                return 4;
+                return 8;
+
             default:
                 return -1;
 
@@ -298,13 +301,13 @@ namespace virtualfpu {
 
                     ostringstream ss;
                     ss << "Missing matching bracket at index " << idx;
-                    throw new VirtualFPUException(ss.str());
+                    throw VirtualFPUException(ss.str());
                 }
 
 
             } else if (isOperator(token)) {
 
-                if (last == TK_OPERATOR) {
+                if ((last == TK_OPERATOR || last == TK_FUNCTION) && token != "-") {
 
                     ostringstream ss;
 
@@ -318,7 +321,7 @@ namespace virtualfpu {
 
                 if (!temp.empty()) {
 
-                    if (opItem->instr == SUB && temp.top()->instr == PAR_OPEN && last != TK_NUM) {
+                    if (opItem->instr == SUB && (temp.top()->instr == PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM) {
                         opItem->instr = UNARY_MINUS;
                     }
 
@@ -331,7 +334,7 @@ namespace virtualfpu {
                             break;
                         }
 
-                        if (getOperatorPrecedence(topOp->instr) > getOperatorPrecedence(opItem->instr)) {
+                        if (getOperatorPrecedence(topOp->instr) >= getOperatorPrecedence(opItem->instr)) {
 
                             instrVector->push_back(topOp);
                             temp.pop();
@@ -361,6 +364,51 @@ namespace virtualfpu {
                 }
 
                 last = TK_OPERATOR;
+
+            } else if (isFunction(token)) {
+                if (last == TK_FUNCTION) {
+
+                    ostringstream ss;
+
+                    ss << "Invalid function sequence " << token << " at index " << idx;
+                    //due operatori successivi
+                    throw VirtualFPUException(ss.str());
+                }
+
+
+                StackItem *opItem = new StackItem();
+                opItem->fromString(token);
+
+                if (!temp.empty()) {
+
+                    for (;;) {
+
+                        //gestione precedenza operatori
+                        StackItem* topOp = temp.top();
+
+                        if (topOp->instr == PAR_OPEN) {
+                            break;
+                        }
+
+                        if (getOperatorPrecedence(topOp->instr) > getOperatorPrecedence(opItem->instr)) {
+
+                            instrVector->push_back(topOp);
+                            temp.pop();
+
+                        } else {
+                            break;
+                        }
+
+                        if (temp.empty()) break;
+                    }
+
+                }
+
+                temp.push(opItem);
+
+
+                last = TK_FUNCTION;
+
 
             } else if (isVarDefined(token)) {
 
@@ -409,11 +457,27 @@ namespace virtualfpu {
 
         try {
             item.fromString(token);
-            return true;
+            return isOperator(item.instr);
         } catch (VirtualFPUException &ex) {
-            //non è un operatore o funzione
             return false;
         }
+    }
+
+    bool VirtualFPU::isOperator(const Instruction instr) {
+        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS;
+    }
+
+    bool VirtualFPU::isFunction(const string& token) {
+
+        StackItem item;
+
+        try {
+            item.fromString(token);
+            return item.instr == SIN || item.instr == COS || item.instr == SQRT;
+        } catch (VirtualFPUException &ex) {
+            return false;
+        }
+
     }
 
     /**
@@ -623,16 +687,15 @@ namespace virtualfpu {
                 delete executeStack[0];
                 return r;
             } else {
-                throw new VirtualFPUException("Error evaluating expression.");
+                throw VirtualFPUException("Error evaluating expression.");
             }
         } catch (VirtualFPUException &e) {
             stringstream ss;
             ss << "Error:" << e.getMessage();
-            for (int i=0;i<executeStack.size();++i)
-            {
+            for (int i = 0; i < executeStack.size(); ++i) {
                 delete executeStack[i];
             }
-            throw new VirtualFPUException(ss.str());
+            throw VirtualFPUException(ss.str());
         }
 
 
@@ -827,7 +890,7 @@ namespace virtualfpu {
     void VirtualFPU::defineVar(const string &name, double value) {
 
         if (name == "") {
-            throw new VirtualFPUException(string("Variabile name not set"));
+            throw VirtualFPUException(string("Variabile name not set"));
         }
 
         if (name.find(' ') != string::npos) throw VirtualFPUException(string("Invalid variabile name:space is not allowed."));
@@ -874,13 +937,11 @@ namespace virtualfpu {
      */
     double VirtualFPU::getVar(const string &varName) {
 
-        try {
-
-            return (*defVars)[varName];
-
-        } catch (std::out_of_range &ex) {
-            throw new VirtualFPUException(string("Variabile ") + varName + string(" is not defined!"));
+        if (!defVars->count(varName)) {
+            throw VirtualFPUException(string("Variabile ") + varName + string(" is not defined!"));
         }
+
+        return (*defVars)[varName];
 
     }
 
