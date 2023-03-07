@@ -23,6 +23,10 @@ int main(int argc, char** argv) {
 
         fpu.defineVar(string("g"), 9.82);
         
+         fpu.compile("g*g");
+         
+         cout<<fpu.evaluate()<<endl;
+        
         cout<<fpu.getVar("g")<<endl;
 
         //5,9,8,+,4,6,*,*,7,+,*

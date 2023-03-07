@@ -38,7 +38,13 @@ namespace virtualfpu {
 
         switch (item.instr) {
             case VALUE:
-                ostr << item.value;
+                if (!item.defVar.empty())
+                {
+                    ostr<<item.defVar;
+                }
+                else {
+                    ostr << item.value;
+                }
                 break;
             case UNARY_MINUS:
                 ostr << "[-]";
@@ -105,6 +111,7 @@ namespace virtualfpu {
         StackItem *s = new StackItem();
         s->value = this->value;
         s->instr = this->instr;
+        s->defVar=this->defVar;
         return s;
     }
 
@@ -400,14 +407,14 @@ namespace virtualfpu {
 
 
             } else if (isVarDefined(token)) {
+                
+                //variable defined in the lookup table
 
                 StackItem *s = new StackItem();
-
                 s->instr = VALUE;
                 s->value = getVar(token);
-
+                s->defVar=token;
                 instrVector->push_back(s);
-
                 last = TK_NUM;
 
             } else {
@@ -692,16 +699,16 @@ namespace virtualfpu {
 
         switch (operation->instr) {
             case UNARY_MINUS:
-                operand->value = -operand->value;
+                operand->value = -getValue(operand);
                 break;
             case SIN:
-                operand->value = sin(operand->value);
+                operand->value = sin(getValue(operand));
                 break;
             case COS:
-                operand->value = cos(operand->value);
+                operand->value = cos(getValue(operand));
                 break;
             case SQRT:
-                operand->value = sqrt(operand->value);
+                operand->value = sqrt(getValue(operand));
                 break;
             default:
                 throw VirtualFPUException("Unsupported function");
@@ -710,6 +717,11 @@ namespace virtualfpu {
         return operand;
 
     }
+    
+     double VirtualFPU::getValue(StackItem *operand)
+     {
+         return operand->defVar.empty() ? operand->value : getVar(operand->defVar);
+     }
 
     /**
      * op1 <op> op2
@@ -722,14 +734,14 @@ namespace virtualfpu {
 
         switch (operation->instr) {
             case ADD:
-                return op1->value + op2->value;
+                return getValue(op1) + getValue(op2);
             case SUB:
             case UNARY_MINUS:
-                return op1->value - op2->value;
+                return getValue(op1) - getValue(op2);
             case MUL:
-                return op1->value * op2->value;
+                return getValue(op1) * getValue(op2);
             case DIV:
-                return op1->value / op2->value;
+                return getValue(op1) / getValue(op2);
             default:
                 throw VirtualFPUException("Unsupported function for two operands");
         }

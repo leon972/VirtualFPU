@@ -251,6 +251,8 @@ namespace virtualfpu {
         double evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation);
 
         bool reduceStack(std::vector<StackItem*> &stack);
+        
+        double getValue(StackItem *operand);
 
     };
 
