@@ -35,7 +35,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/_ext/29dd86f/virtualfpu.o \
+	${OBJECTDIR}/tests.o
 
 
 # C Compiler Flags
@@ -62,10 +63,15 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tests: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tests ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/main.o: main.cpp
+${OBJECTDIR}/_ext/29dd86f/virtualfpu.o: ../../virtualfpu.cpp
+	${MKDIR} -p ${OBJECTDIR}/_ext/29dd86f
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/29dd86f/virtualfpu.o ../../virtualfpu.cpp
+
+${OBJECTDIR}/tests.o: tests.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -O2 -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tests.o tests.cpp
 
 # Subprojects
 .build-subprojects:

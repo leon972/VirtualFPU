@@ -13,7 +13,8 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.cpp</itemPath>
+      <itemPath>tests.cpp</itemPath>
+      <itemPath>../../virtualfpu.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -27,6 +28,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../..</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
@@ -37,14 +41,20 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>11</standard>
           <incDir>
             <pElem>../..</pElem>
           </incDir>
           <commandLine>--std=c++2a</commandLine>
         </ccTool>
+        <linkerTool>
+          <linkerDynSerch>
+            <pElem>../..</pElem>
+          </linkerDynSerch>
+        </linkerTool>
       </compileType>
-      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      <item path="../../virtualfpu.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="tests.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -73,7 +83,9 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      <item path="../../virtualfpu.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="tests.h" ex="false" tool="3" flavor2="0">
       </item>

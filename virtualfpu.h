@@ -201,6 +201,9 @@ namespace virtualfpu {
          * Undefine all custom variables
          */
         void clearAllVariables();
+        
+        
+        const string& getLastCompiledStatement();
 
 
     protected:
@@ -234,8 +237,12 @@ namespace virtualfpu {
          * @return 
          */
         bool isFunction(const string& token);
+        
+        bool isFunction(const Instruction& instr);
 
     private:
+        
+        string last_compiled_statement;
 
         void init(size_t stackSize);
 
@@ -246,6 +253,8 @@ namespace virtualfpu {
         bool reduceStack(std::vector<StackItem*> &stack);
 
         double getValue(StackItem *operand);
+        
+        void throwError(const string &msg);
 
     };
 
