@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
     try {
 
-        VirtualFPU fpu;
+        RPNCompiler fpu;
 
         fpu.defineVar(string("g"), 9.82);
         

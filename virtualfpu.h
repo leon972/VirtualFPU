@@ -74,7 +74,7 @@ namespace virtualfpu {
      * L'espressione viene convertita in notazione polacca inversa e valutata usando uno stack
      * @param stackSize
      */
-    class VirtualFPU {
+    class RPNCompiler {
     public:
 
         static const size_t DEFAULT_STACK_SIZE = 1024;
@@ -89,7 +89,7 @@ namespace virtualfpu {
          * Compila l'espressione creando lo stack RPN usato in seguito per la valutazione del valore
          * dell'espressione
          */
-        VirtualFPU& compile(const string& statement);
+        RPNCompiler& compile(const string& statement);
 
         /**
          * Valuta l'espressione compilata in precedenza
@@ -102,11 +102,11 @@ namespace virtualfpu {
          * 
          * @param stackSize dimensione stack in "word" virtuali
          */
-        VirtualFPU(size_t stackSize);
+        RPNCompiler(size_t stackSize);
 
-        VirtualFPU();
+        RPNCompiler();
 
-        virtual ~VirtualFPU();
+        virtual ~RPNCompiler();
 
 
         /**

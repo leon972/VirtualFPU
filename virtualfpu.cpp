@@ -132,11 +132,11 @@ namespace virtualfpu {
 
    
 
-    VirtualFPU::VirtualFPU() : instrVector(0) {
+    RPNCompiler::RPNCompiler() : instrVector(0) {
         init(DEFAULT_STACK_SIZE);
     }
 
-    VirtualFPU::~VirtualFPU() {
+    RPNCompiler::~RPNCompiler() {
         
           clearStack();
         
@@ -158,7 +158,7 @@ namespace virtualfpu {
     /**
      * Restituisce la precedenza dell'operatore
      */
-    int VirtualFPU::getOperatorPrecedence(const Instruction& instr) {
+    int RPNCompiler::getOperatorPrecedence(const Instruction& instr) {
 
         switch (instr) {
             case VALUE:
@@ -189,7 +189,7 @@ namespace virtualfpu {
      * Compila l'espressione creando lo stack RPN usato in seguito per la valutazione del valore
      * dell'espressione
      */
-    VirtualFPU& VirtualFPU::compile(const string& statement) {
+    RPNCompiler& RPNCompiler::compile(const string& statement) {
 
         const string err = "Syntax error:";
 
@@ -447,7 +447,7 @@ namespace virtualfpu {
     /**
      *Determina se il token è un operatore valido
      */
-    bool VirtualFPU::isOperator(const string& token) {
+    bool RPNCompiler::isOperator(const string& token) {
 
         StackItem item;
 
@@ -459,11 +459,11 @@ namespace virtualfpu {
         }
     }
 
-    bool VirtualFPU::isOperator(const Instruction instr) {
+    bool RPNCompiler::isOperator(const Instruction instr) {
         return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS;
     }
 
-    bool VirtualFPU::isFunction(const string& token) {
+    bool RPNCompiler::isFunction(const string& token) {
 
         StackItem item;
 
@@ -479,7 +479,7 @@ namespace virtualfpu {
     /**
      * Determina se è un numero
      */
-    bool VirtualFPU::isNumber(const string& token) {
+    bool RPNCompiler::isNumber(const string& token) {
 
         int idx = 0;
         const int lu = token.length();
@@ -534,7 +534,7 @@ namespace virtualfpu {
 
     }
 
-    double VirtualFPU::toDouble(const string& token) {
+    double RPNCompiler::toDouble(const string& token) {
         double r = 0;
 
         istringstream ss(token);
@@ -549,7 +549,7 @@ namespace virtualfpu {
 
     }
 
-    string VirtualFPU::getToken(const string& statement, int fromIndex, int *nextIndex) {
+    string RPNCompiler::getToken(const string& statement, int fromIndex, int *nextIndex) {
 
         const size_t lu = statement.length();
 
@@ -601,7 +601,7 @@ namespace virtualfpu {
         return ss.str();
     }
 
-    bool VirtualFPU::reduceStack(std::vector<StackItem*> &stack) {
+    bool RPNCompiler::reduceStack(std::vector<StackItem*> &stack) {
         auto lu = stack.size();
         if (lu > 0) {
             int i = lu - 1;
@@ -659,7 +659,7 @@ namespace virtualfpu {
      * Valuta l'espressione compilata in precedenza
      * @return 
      */
-    double VirtualFPU::evaluate() {
+    double RPNCompiler::evaluate() {
 
         //6 7 - 7 3 - * 2 -
 
@@ -695,7 +695,7 @@ namespace virtualfpu {
         }   
     }
 
-    StackItem* VirtualFPU::evaluateUnary(StackItem *operand, StackItem *operation) {
+    StackItem* RPNCompiler::evaluateUnary(StackItem *operand, StackItem *operation) {
 
         switch (operation->instr) {
             case UNARY_MINUS:
@@ -718,7 +718,7 @@ namespace virtualfpu {
 
     }
     
-     double VirtualFPU::getValue(StackItem *operand)
+     double RPNCompiler::getValue(StackItem *operand)
      {
          return operand->defVar.empty() ? operand->value : getVar(operand->defVar);
      }
@@ -730,7 +730,7 @@ namespace virtualfpu {
      * @param operation
      * @return 
      */
-    double VirtualFPU::evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation) {
+    double RPNCompiler::evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation) {
 
         switch (operation->instr) {
             case ADD:
@@ -752,7 +752,7 @@ namespace virtualfpu {
      * Dimensione massima dello stack
      * @return 
      */
-    size_t VirtualFPU::getStackSize() const {
+    size_t RPNCompiler::getStackSize() const {
         return instrVector->size();
     }
 
@@ -760,14 +760,14 @@ namespace virtualfpu {
      * Numero di istruzioni presenti nello stack
      * @return 
      */
-    size_t VirtualFPU::stackLength() const {
+    size_t RPNCompiler::stackLength() const {
         return instrVector->size();
     }
 
     /**
      * Determina se lo stack è vuoto
      */
-    bool VirtualFPU::stackIsEmpty() const {
+    bool RPNCompiler::stackIsEmpty() const {
         return instrVector->empty();
     }
 
@@ -775,7 +775,7 @@ namespace virtualfpu {
      * Resetta lo stack
      * @return 
      */
-    void VirtualFPU::clearStack() {
+    void RPNCompiler::clearStack() {
 
         if (instrVector && instrVector->size()>0) {
 
@@ -792,7 +792,7 @@ namespace virtualfpu {
      * Restituisce la rappresentazione RPN
      * dell'espressione
      */
-    string VirtualFPU::getRPNStack() const {
+    string RPNCompiler::getRPNStack() const {
 
         ostringstream ss;
 
@@ -813,7 +813,7 @@ namespace virtualfpu {
      * Restituisce lo stato del registro di output
      * @return 
      */
-    double VirtualFPU::queryOutputRegister() const {
+    double RPNCompiler::queryOutputRegister() const {
         return output;
     }
 
@@ -823,7 +823,7 @@ namespace virtualfpu {
      * @param name nome della variabile che puo' essere usata nell'espressione
      * @param value
      */
-    void VirtualFPU::defineVar(const string &name, double value) {
+    void RPNCompiler::defineVar(const string &name, double value) {
 
         if (name == "") {
             throw VirtualFPUException(string("Variabile name not set"));
@@ -850,7 +850,7 @@ namespace virtualfpu {
     /**
      * Rimuove una variabile
      */
-    void VirtualFPU::undefVar(const string &name) {
+    void RPNCompiler::undefVar(const string &name) {
 
         if (defVars->find(name) != defVars->end()) {
             defVars->erase(name);
@@ -862,7 +862,7 @@ namespace virtualfpu {
      * @param name
      * @return 
      */
-    bool VirtualFPU::isVarDefined(const string &name) {
+    bool RPNCompiler::isVarDefined(const string &name) {
         return defVars->find(name) != defVars->end();
     }
 
@@ -871,7 +871,7 @@ namespace virtualfpu {
      * @param varName
      * @return 
      */
-    double VirtualFPU::getVar(const string &varName) {
+    double RPNCompiler::getVar(const string &varName) {
 
         if (!defVars->count(varName)) {
             throw VirtualFPUException(string("Variabile ") + varName + string(" is not defined!"));
@@ -884,7 +884,7 @@ namespace virtualfpu {
     /**
      *Resetta tutte le variabili
      */
-    void VirtualFPU::clearAllVariables() {
+    void RPNCompiler::clearAllVariables() {
 
         defVars->clear();
 
@@ -895,7 +895,7 @@ namespace virtualfpu {
      * @param stackSize
      * @return 
      */
-    void VirtualFPU::init(size_t stackSize) {
+    void RPNCompiler::init(size_t stackSize) {
 
         if (stackSize <= 0) {
             throw VirtualFPUException("Invalid stack size on init");
