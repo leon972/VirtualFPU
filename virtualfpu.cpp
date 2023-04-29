@@ -300,9 +300,9 @@ namespace virtualfpu {
                         if (s->instr == PAR_OPEN) {
                             matchingParFound = true;
                             temp.pop();
-                          //  if (!temp.empty() && isFunction(temp.top()->instr)) {
-                                break;
-                          //  }
+                            //  if (!temp.empty() && isFunction(temp.top()->instr)) {
+                            break;
+                            //  }
                             // break;
                         } else {
                             instrVector->push_back(s);
@@ -314,12 +314,12 @@ namespace virtualfpu {
                         }
                     }
 
-               /**     if (!matchingParFound) {
+                    /**     if (!matchingParFound) {
 
-                        ostringstream ss;
-                        ss << "Missing matching bracket at index " << idx;
-                        throwError(ss.str());
-                    }*/
+                             ostringstream ss;
+                             ss << "Missing matching bracket at index " << idx;
+                             throwError(ss.str());
+                         }*/
 
                 }
 
@@ -646,6 +646,7 @@ namespace virtualfpu {
                     case SIN:
                     case SQRT:
                         evaluateUnary(op1, item);
+                        op1->defVar = ""s;
                         delete stack[lu - 1];
                         stack.pop_back();
                         return true;
@@ -664,6 +665,7 @@ namespace virtualfpu {
                         }
 
                         op2->value = evaluateOperation(op2, op1, item);
+                        op2->defVar = ""s;
 
                         delete stack[lu - 1];
                         delete stack[lu - 2];
@@ -749,22 +751,14 @@ namespace virtualfpu {
                 return getValue(op1) + getValue(op2);
             case SUB:
             case UNARY_MINUS:
-                //DEBUG
-            {
-                double v1=getValue(op1);
-                double v2=getValue(op2);
-                cout<<"EXECUTE SUB " <<"op1="<<v1<<" op2="<<v2;
-                return v1 - v2;
-            }
-            break;
-            case MUL:
-                 {
-                double v1=getValue(op1);
-                double v2=getValue(op2);
-                cout<<"EXECUTE MUL " <<"op1="<<v1<<" op2="<<v2;
-                return v1 * v2;
-            }
-            break;
+                                           
+                return getValue(op1) - getValue(op2);
+
+            case MUL:            
+                      
+                return getValue(op1) * getValue(op2);
+            
+                break;
             case DIV:
                 return getValue(op1) / getValue(op2);
             default:
@@ -859,12 +853,7 @@ namespace virtualfpu {
         if (!defVars->count(varName)) {
             throwError(string("Variabile ") + varName + string(" is not defined!"));
         }
-
-        double val=(*defVars)[varName];
-        //DEBUG!!
-        cout<<"GET VAR "<<varName<<" = "<<val<<endl;
-        
-        return val;
+        return defVars->at(varName);
 
     }
 

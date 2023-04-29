@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
         fpu.defineVar("g",10);      
         fpu.compile("g*g-2");
         cout<<fpu.getRPNStack()<<endl;
-        cout<<fpu.evaluate()<<endl;
+        cout<<"RESULT="<<fpu.evaluate()<<endl;
 
         fpu.compile("5*(3+7)+10");
         cout << fpu.getRPNStack() << endl;
@@ -92,8 +92,40 @@ int main(int argc, char** argv) {
         tests::expect_num(fpu.getVar("g"),9.81,"var value not valid"s,"OK set var"s);
         tests::expect_num(fpu.getVar("g"),9.81,"var value not valid"s,"OK set var"s);
         fpu.compile("g*g-2");
-        tests::expect_num(fpu.evaluate(),94.2361,"error evaluating using custom variable"s);
+        tests::expect_num(fpu.evaluate(),94.2361,"error evaluating using custom variable"s,"OK calc with defned var");
         
+        fpu.undefVar("g");
+        tests::expect_false(fpu.isVarDefined("g"),"Error undefine var","OK undefine var");
+        
+        fpu.defineVar("x",0);
+        fpu.defineVar("y",0);
+        
+        fpu.compile("(x+y)*(x-y)");
+        
+        for (double x=-10;x<10;x+=0.5)
+        {
+            for (double y=x;y<x+10;y+=0.5)
+            {
+                fpu.defineVar("x",x);
+                fpu.defineVar("y",y);
+                const auto value=(x+y)*(x-y);
+                const auto evaluated=fpu.evaluate();
+                cout<<"x="<<x<<" y="<<y<<" evaluated="<<fpu.evaluate()<<" actual value="<<value<<endl;
+                tests::expect_num(evaluated,value,"failed calc with x,y");                
+            }            
+        }        
+        
+        double x=3.45;
+        double y=-1.2;
+        fpu.defineVar("x",x);
+        fpu.defineVar("y",y);        
+        fpu.compile("sin((x+y)/2)*cos((x-y)/2)");
+        tests::expect_num(fpu.evaluate(),sin((x+y)/2)*cos((x-y)/2),"failed to evalute using def var x,y","OK expression x,y");
+        fpu.compile("3*x*x*x-2*y*y/x");
+        tests::expect_num(fpu.evaluate(),3*x*x*x-2*y*y/x,"failed to evalute using def var x,y","OK expression x,y");
+        
+        
+        cout<<"TESTS SUCCESS!"<<endl;
 
 
     } catch (std::exception &e) {

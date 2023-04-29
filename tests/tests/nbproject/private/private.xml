@@ -7,6 +7,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group name="TestProjects">
+            <file>file:/home/leonardo/projects/cpp/VirtualFPU/main.cpp</file>
+            <file>file:/home/leonardo/projects/cpp/VirtualFPU/tests/tests/tests.cpp</file>
+            <file>file:/home/leonardo/projects/cpp/VirtualFPU/virtualfpu.cpp</file>
+            <file>file:/home/leonardo/projects/cpp/VirtualFPU/virtualfpu.h</file>
             <file>file:/home/leonardo/projects/cpp/VirtualFPU/tests/tests/tests.h</file>
         </group>
     </open-files>
