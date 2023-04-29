@@ -3,6 +3,9 @@
   Author: Leonardo Berti
  
   Mathematical expression interpreter and compiler 
+  
+  (A C++20 compliant compiler is required)
+ 
 
  MIT License
 
@@ -49,7 +52,7 @@ namespace virtualfpu {
         VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, SQRT, SIN, COS
     };
 
-    class VirtualFPUException {
+    class VirtualFPUException: public std::exception {
     public:
 
         VirtualFPUException(const string& msg);
@@ -57,6 +60,8 @@ namespace virtualfpu {
         virtual ~VirtualFPUException();
 
         const string getMessage() const;
+        
+        virtual const char * what () const noexcept override;
 
     private:
 
@@ -98,7 +103,7 @@ namespace virtualfpu {
         /**       
          * @return a lower value means a lower precedence
          */
-        static int getOperatorPrecedence(const Instruction& instr);
+        static int getOperatorPrecedence(const Instruction& instr) noexcept;
 
 
         /**
