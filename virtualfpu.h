@@ -1,12 +1,31 @@
 /* 
- * File:   virtualfpu.h
- * Author: Leonardo Berti
- * Copyright (c) 2014
- * Created on 8 febbraio 2014, 16.03
- * 
- * FPU virtuale per l'interpretazione e compilazione in notazione RPN
- * (Reverse Polish Notation)
- * di espressioni matematiche
+  File:   virtualfpu.h
+  Author: Leonardo Berti
+ 
+  Mathematical expression interpreter and compiler 
+
+ MIT License
+
+ Copyright (c) 2014-2024 Leonardo Berti (leonardo.berti[at]ymail.com)
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ 
  */
 
 #ifndef VIRTUALFPU_H
@@ -24,16 +43,12 @@ namespace virtualfpu {
     using namespace std;
 
     /**
-     *Set di istruzioni disponibili
+     * Available operators and functions
      */
     enum Instruction {
         VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, SQRT, SIN, COS
     };
 
-    /**
-     * Eccezione virtual FPU
-     * @param msg
-     */
     class VirtualFPUException {
     public:
 
@@ -50,11 +65,13 @@ namespace virtualfpu {
 
     };
 
+    /**
+     * RPN stack item
+     */
     struct StackItem {
-        
         Instruction instr;
         double value;
-        string defVar; 
+        string defVar;
 
         /**
          Converte da stringa ad operatore
@@ -69,10 +86,8 @@ namespace virtualfpu {
     ostream& operator<<(ostream& s, const StackItem& item);
 
     /**
-     * FPU virtuale per calcoli matematici.
-     * Utilizza architettura stack-based per la valutazione di espressioni matematiche
-     * L'espressione viene convertita in notazione polacca inversa e valutata usando uno stack
-     * @param stackSize
+     * Mathematical expressions compiler and evaluator.
+     * Converta the expression in a RPN (Reverse Polish Notation) before evaluation
      */
     class RPNCompiler {
     public:
@@ -80,170 +95,143 @@ namespace virtualfpu {
         static const size_t DEFAULT_STACK_SIZE = 1024;
 
 
-        /**
-         * Restituisce la precedenza dell'operatore
+        /**       
+         * @return a lower value means a lower precedence
          */
         static int getOperatorPrecedence(const Instruction& instr);
 
+
         /**
-         * Compila l'espressione creando lo stack RPN usato in seguito per la valutazione del valore
-         * dell'espressione
+         * Create the compiler using a predefined RPN stack size 
+         * 
+         */
+        RPNCompiler(size_t stackSize);
+
+        /**
+         * Create the compiler using the DEFAULT_STACK_SIZE
+         */
+        RPNCompiler();
+
+        virtual ~RPNCompiler();
+
+        /**
+         * Compile a mathematical expression.
+         * After the compilation a RPN stack is created internally and the evaluate method can be used to evalute the expression
+         * @param statement example "4*(2.3*sin(1/(1+4.56)))/8, expressions can use user defined variable see the method defineVar
          */
         RPNCompiler& compile(const string& statement);
 
         /**
-         * Valuta l'espressione compilata in precedenza
+         * Evaluate the expression.Before calling this method the expression must be compiled using the compile method
          * @return 
          */
         double evaluate();
 
 
         /**
-         * 
-         * @param stackSize dimensione stack in "word" virtuali
-         */
-        RPNCompiler(size_t stackSize);
-
-        RPNCompiler();
-
-        virtual ~RPNCompiler();
-
-
-        /**
-         * Dimensione massima dello stack
+         * Max stack size
          * @return 
          */
         size_t getStackSize() const;
 
         /**
-         * Numero di istruzioni presenti nello stack
+         * Actual number of instructions inside the internal stack
          * @return 
          */
         size_t stackLength() const;
 
         /**
-         * Determina se lo stack è vuoto
+         * Checks if the instructions stack is empty
          */
         bool stackIsEmpty() const;
 
 
         /**
-         * Resetta lo stack
+         * Clear the instructions stack.After calling this method an expression must be compiled again before evaluating
          * @return 
          */
         void clearStack();
 
 
         /**
-         *Restituisce la rappresentazione RPN
+         * @return the RPN (Reverse Polish Notation) of the expression
          */
         string getRPNStack() const;
 
 
-        /**
-         * Restituisce lo stato del registro di output
-         * @return 
-         */
         double queryOutputRegister() const;
 
         /**
-         * Definisce una variabile
-         * se la variabile è già esistente ne cambia il valore
-         * @param name nome della variabile che puo' essere usata nell'espressione
-         * @param value
+         * Define a custom variable.The variable can be used in the mathematical expression.
+         * This method may be used to change the current value of an already defined variable.
+         * If the variable was already defined before compilation, the expression can be evaluated using the new value
+         * without compiling the expression again.
+         * @param value variable value
+         * @param name variable name
+         * Example:
+         * defineVar("pi",3.1415);
+         * compile("cos(p1/2)")
          */
         void defineVar(const string &name, double value);
 
         /**
-         * Rimuove una variabile
+         * Undefine an existing custom variable
          */
         void undefVar(const string &name);
 
         /**
-         * Determina se una variabile è definita
-         * @param name
-         * @return 
+         * Check if a variable is defined
          */
         bool isVarDefined(const string &name);
 
 
         /**
-         * Acquisisce il valore di una variabile
-         * @param varName
-         * @return 
+         * Get the actual value of a custom defined variable
+         * @param varName the variable symbol
+         * @return the current value
          */
         double getVar(const string &varName);
 
         /**
-         *Resetta tutte le variabili
+         * Undefine all custom variables
          */
         void clearAllVariables();
 
 
     protected:
 
-        
-
-        //vettore usato come delegato dello stack, si usa un vettore per poter
-        //esaminarne velocemente il contenuto
-        vector<StackItem*> *instrVector;
-
-     //   stack<StackItem *, vector<StackItem*> > *instrStack;
 
         /**
-         Definizione variabili
+         * Internal instruction stack
          */
+        vector<StackItem*> *instrVector;
+
         map<string, double> *defVars;
 
         /**
-         * Output della valutazione dell'espressione
-         * @param stackSize
+         * Current evaluation output
          */
         double output;
 
-
-        /**
-         * Acquisisce un token
-         * @param statement
-         * @param fromIndex
-         * @param nextIndex
-         * @return 
-         */
         string getToken(const string& statement, int fromIndex, int *nextIndex);
 
-        /**
-         * Converte il token in double
-         * @param stackSize
-         */
         double toDouble(const string& token);
 
-        /**
-         * Determina se è un valore numerico
-         * @param token
-         * @return 
-         */
         bool isNumber(const string& token);
 
+        bool isOperator(const string& token);
+
+        bool isOperator(const Instruction instr);
+
         /**
-         * Determina se è un operatore
+         * Check if the token is a function such as sin, cos
          * @param token
          * @return 
          */
-        bool isOperator(const string& token);
-        
-        bool isOperator(const Instruction instr);
-        
         bool isFunction(const string& token);
-
-
 
     private:
 
-        /**
-         * inizializza lo stack e le altre strutture, invocato dal costruttore
-         * @param stackSize
-         * @return 
-         */
         void init(size_t stackSize);
 
         StackItem* evaluateUnary(StackItem *operand, StackItem *operation);
@@ -251,13 +239,12 @@ namespace virtualfpu {
         double evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation);
 
         bool reduceStack(std::vector<StackItem*> &stack);
-        
+
         double getValue(StackItem *operand);
 
     };
 
-
-}; //fine namespace
+};
 
 
 #endif /* VIRTUALFPU_H */
