@@ -30,7 +30,7 @@ All values are treated as C++ double (no template supported yet!)
     RPNCompiler fpu;      
 
     fpu.defineVar("x", 1.67);
-    fpu.defineVar("PI", M_PI);
+    fpu.defineVar("PI", M_PI); 
     
     fpu.compile("tan(PI/4)+x^2");
     
