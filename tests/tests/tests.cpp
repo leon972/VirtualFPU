@@ -41,13 +41,14 @@ int main(int argc, char** argv) {
 
         RPNCompiler fpu;
 
-        // fpu.compile("2.1*(1+1)");
-        //  cout<<fpu.evaluate()<<endl;
+        fpu.defineFunction("cube", [](double v) {
+            return v*v*v;
+        });
 
-        fpu.compile("4sin(2.1)");
+        fpu.compile("cube(3)-7");
         cout << fpu.getRPNStack() << endl;
         cout << fpu.evaluate() << endl;
-        cout << fpu.evaluate() << endl;
+      
 
         cout << "-------------------------" << endl;
 
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
             {"1-2.56^(sin(8/9))", 1 - 2.0746557603876212},
             {"4sin(2.3)-5cos(2.2)/6sin(1.1)", 3.419884621292166},
             {"4 + 5*sin(cos(12sqrt(8+32+5)))", 5.846170068808339},
-            {"4*sin(-1.2)+(-1*(8/9+5/6))",4*sin(-1.2)+(-1*(8.0/9.0+5.0/6.0))}
+            {"4*sin(-1.2)+(-1*(8/9+5/6))", 4 * sin(-1.2)+(-1 * (8.0 / 9.0 + 5.0 / 6.0))}
 
         };
 
@@ -178,13 +179,37 @@ int main(int argc, char** argv) {
             {"sinh(3.2)-cosh(8.9)+tanh(3.1)", sinh(3.2) - cosh(8.9) + tanh(3.1)},
             {"asinh(3.2)-acosh(8.9)+atanh(3.1)", asinh(3.2) - acosh(8.9) + atanh(3.1)},
             {"4exp(2.3)", 4 * exp(2.3)},
-            {"sqrt(cos(x)^2+sin(x)^2)",1},
-            {"sqrt(abs(-9*9))",9},
-            {"abs(11)+abs(-11)+sign(7-7)",22}
+            {"sqrt(cos(x)^2+sin(x)^2)", 1},
+            {"sqrt(abs(-9*9))", 9},
+            {"abs(11)+abs(-11)+sign(7-7)", 22}
 
         };
 
         testStatements(fpu, statements);
+
+        tests::print_test_title("CUSTOM FUNCTIONS");
+
+        fpu.clearStack();
+        fpu.clearAllVariables();
+        fpu.clearAllCustomFunctions();
+
+        fpu.defineFunction("cube", [](double v) {
+            return v*v*v;
+        });
+        
+        fpu.defineFunction("inv", [](double v) {
+            return 1/v;
+        });
+
+        statements = {
+            {"cube(3)-20", 7},
+            {"inv(10)*10",1},
+            {"inv(cos(cube(1.22)))",1/(cos(1.22*1.22*1.22))},
+            {"cube(3)/4+5/cube(2)-1/(1-inv(cube(2)))",(3*3*3)/4.0+5.0/8.0-1.0/(1.0-1.0/8.0)}
+        };
+        testStatements(fpu, statements);
+
+
 
         cout << "TESTS SUCCESS!" << endl;
 

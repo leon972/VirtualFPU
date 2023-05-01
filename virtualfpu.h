@@ -40,6 +40,7 @@
 #include <stack>
 #include <vector>
 #include <iostream>
+#include <functional>
 
 namespace virtualfpu {
 
@@ -49,7 +50,7 @@ namespace virtualfpu {
      * Available operators and functions
      */
     enum class Instruction {
-        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, POW,SQRT, SIN, COS, TAN, ASIN, ACOS, ATAN, ABS, EXP, LOG, LOG10, LOG2, SINH, COSH, TANH, ASINH, ACOSH, ATANH, SIGN
+        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, POW,DEF_FUNCTION, SQRT, SIN, COS, TAN, ASIN, ACOS, ATAN, ABS, EXP, LOG, LOG10, LOG2, SINH, COSH, TANH, ASINH, ACOSH, ATANH, SIGN
     };
 
     class VirtualFPUException : public std::exception {
@@ -182,10 +183,25 @@ namespace virtualfpu {
         void undefVar(const string &name);
 
         /**
+         * Define a custom function
+         * @param name function name identified
+         * @param fn the function
+         */
+        void defineFunction(const string &name, std::function<double(double) > fn);
+
+        void undefFunction(const string &name);
+
+        /**
          * Check if a variable is defined
          */
         bool isVarDefined(const string &name);
 
+        /**
+         * Chack if is a custom defined function
+         * @param name
+         * @return 
+         */
+        bool isFnDefined(const string &name);
 
         /**
          * Get the actual value of a custom defined variable
@@ -198,6 +214,11 @@ namespace virtualfpu {
          * Undefine all custom variables
          */
         void clearAllVariables();
+        
+        /**
+         * Undefine all custom define functions
+         */
+        void clearAllCustomFunctions();
 
 
         const string& getLastCompiledStatement();
@@ -211,7 +232,15 @@ namespace virtualfpu {
          */
         vector<StackItem*> *instrVector;
 
+        /**
+         * User defined variables
+         */
         map<string, double> *defVars;
+
+        /**
+         * User defined functions
+         */
+        map<string, std::function<double(double) >> *defFunctions;
 
         /**
          * Current evaluation output
@@ -237,6 +266,12 @@ namespace virtualfpu {
 
         bool isFunction(const Instruction& instr);
 
+        bool isFunction(const StackItem* item);
+
+        bool isCustomFunction(const StackItem* item);
+
+        void validateIndentifier(const string &name);
+
         /**       
          * @return a lower value means a lower precedence
          */
@@ -245,7 +280,7 @@ namespace virtualfpu {
         static bool isBuiltinFunction(const Instruction& instr) noexcept;
 
     private:
-        
+
         const int TK_NIL = 0;
         const int TK_NUM = 1;
         const int TK_OPERATOR = 2;
@@ -253,22 +288,24 @@ namespace virtualfpu {
         const int TK_OPEN_BRK = 4;
         const int TK_CLOSE_BRK = 5;
         const int TK_OTHER = 255;
-        
+
         string last_compiled_statement;
 
         void init(size_t stackSize);
 
         StackItem* evaluateUnary(StackItem *operand, StackItem *operation);
 
+        StackItem* evaluateCustomFn(StackItem *operand, StackItem *operation);
+
         double evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation);
 
         bool reduceStack(std::vector<StackItem*> &stack);
 
         double getValue(StackItem *operand);
-        
-        void addImpliedMul(stack<StackItem*> &temp,const int last);
-         void addItemToTempStack(StackItem *item,stack<StackItem*> &stack,const int last);
-        
+
+        void addImpliedMul(stack<StackItem*> &temp, const int last);
+        void addItemToTempStack(StackItem *item, stack<StackItem*> &stack, const int last);
+
         void throwError(const string &msg);
 
     };

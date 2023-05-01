@@ -128,7 +128,7 @@ namespace virtualfpu {
             }}
     };
 
-    static std::map<Instruction, string> symToStr ={
+    static std::map<Instruction, string> symToStr = {
         {Instruction::UNARY_MINUS, "[-]"},
         {Instruction::ADD, "+"},
         {Instruction::SUB, "-"},
@@ -156,7 +156,7 @@ namespace virtualfpu {
         {Instruction::SIGN, "sign"}
     };
 
-    static std::map<string, Instruction> strToSymbol ={
+    static std::map<string, Instruction> strToSymbol = {
         {"[-]", Instruction::UNARY_MINUS},
         {"(", Instruction::PAR_OPEN},
         {")", Instruction::PAR_CLOSE},
@@ -199,7 +199,11 @@ namespace virtualfpu {
             }
         } else if (symToStr.contains(item.instr)) {
             ostr << symToStr[item.instr];
-        } else {
+        } else if (item.instr==Instruction::DEF_FUNCTION)
+        {
+            ostr<<(item.defVar != "" ? item.defVar:"<custom fn?>");
+        }        
+        else {
             ostr << "<?>";
         }
 
@@ -258,12 +262,18 @@ namespace virtualfpu {
             instrVector = nullptr;
         }
 
-        if (defVars && !defVars->empty()) {
+        if (defVars) {
 
             defVars->clear();
             delete defVars;
             defVars = nullptr;
 
+        }
+
+        if (defFunctions) {
+            defFunctions->clear();
+            delete defFunctions;
+            defFunctions = nullptr;
         }
 
     }
@@ -289,6 +299,8 @@ namespace virtualfpu {
                 return 6;
             case Instruction::UNARY_MINUS:
                 return 7;
+            case Instruction::DEF_FUNCTION:
+                return 8;
             default:
                 if (isFunction(instr)) {
                     return 8;
@@ -515,7 +527,32 @@ namespace virtualfpu {
 
                 last = TK_NUM;
 
-            } else {
+            } else if (isFnDefined(token)) {
+                if (last == TK_FUNCTION) {
+
+                    ostringstream ss;
+
+                    ss << "Invalid function sequence " << token << " at index " << idx;
+                    //due operatori successivi
+                    throwError(ss.str());
+                }
+
+                if (last == TK_NUM) {
+                    addImpliedMul(temp, last);
+                    last = TK_OPERATOR;
+                }
+
+
+                StackItem *opItem = new StackItem();
+                opItem->instr = Instruction::DEF_FUNCTION;
+                opItem->defVar = token;
+
+                addItemToTempStack(opItem, temp, last);
+
+                last = TK_FUNCTION;
+
+            }
+            else {
 
                 ostringstream ss;
 
@@ -619,7 +656,7 @@ namespace virtualfpu {
 
         try {
             item.fromString(token);
-            return isFunction(item.instr);
+            return isFunction(item.instr) || defFunctions->contains(token);
         } catch (VirtualFPUException &ex) {
             return false;
         }
@@ -628,6 +665,14 @@ namespace virtualfpu {
 
     bool RPNCompiler::isFunction(const Instruction & instr) {
         return RPNCompiler::isBuiltinFunction(instr);
+    }
+
+    bool RPNCompiler::isFunction(const StackItem* item) {
+        return isFunction(item->instr) || (item->defVar != "" && defFunctions->contains(item->defVar));
+    }
+
+    bool RPNCompiler::isCustomFunction(const StackItem* item) {
+        return item->defVar != "" && defFunctions->contains(item->defVar);
     }
 
     bool RPNCompiler::isNumber(const string & token) {
@@ -802,7 +847,15 @@ namespace virtualfpu {
                     stack.pop_back();
                     return true;
 
-                } else {
+                } else if (item->instr == Instruction::DEF_FUNCTION) {
+                    evaluateCustomFn(op1, item);
+                    op1->defVar = ""s;
+                    delete stack[lu - 1];
+                    stack.pop_back();
+                    return true;
+
+                }
+                else {
 
                     switch (item->instr) {
 
@@ -884,8 +937,19 @@ namespace virtualfpu {
             throwError("Cannot find the built-in one arg function "s + symToStr[operation->instr]);
             return nullptr;
         }
-        operand->value=fn(getValue(operand));
-        operand->defVar="";
+        operand->value = fn(getValue(operand));
+        operand->defVar = "";
+        return operand;
+    }
+
+    StackItem* RPNCompiler::evaluateCustomFn(StackItem *operand, StackItem * operation) {
+
+        std::function<double(double) > fn = defFunctions->at(operation->defVar);
+        if (!fn) {
+            throwError("Cannot find custom function "s + operation->defVar);
+        }
+        operand->value = fn(getValue(operand));
+        operand->defVar = "";
         return operand;
     }
 
@@ -964,13 +1028,12 @@ namespace virtualfpu {
         return output;
     }
 
-    void RPNCompiler::defineVar(const string &name, double value) {
-
+    void RPNCompiler::validateIndentifier(const string &name) {
         if (name == "") {
-            throwError(string("Variabile name not set"));
+            throwError(string("Identifier name not set"));
         }
 
-        if (name.find(' ') != string::npos) throw VirtualFPUException(string("Invalid variabile name:space is not allowed."));
+        if (name.find(' ') != string::npos) throw VirtualFPUException("Invalid identifier name "s + name + ":space is not allowed."s);
 
         const size_t lu = name.length();
 
@@ -985,6 +1048,16 @@ namespace virtualfpu {
             }
         }
 
+    }
+
+    void RPNCompiler::defineVar(const string &name, double value) {
+
+        validateIndentifier(name);
+
+        if (!defVars->contains(name) && defFunctions->contains(name)) {
+            throw VirtualFPUException("Variable name "s + name + " conflicts with an already defined function");
+        }
+
         (*defVars)[name] = value;
     }
 
@@ -995,8 +1068,29 @@ namespace virtualfpu {
         }
     }
 
+    void RPNCompiler::defineFunction(const string &name, std::function<double(double) > fn) {
+        validateIndentifier(name);
+
+        if (!defFunctions->contains(name) && defVars->contains(name)) {
+            throw VirtualFPUException("Function name "s + name + " conflicts with an already defined variable");
+        }
+
+        (*defFunctions)[name] = fn;
+
+    }
+
+    void RPNCompiler::undefFunction(const string &name) {
+        if (defFunctions->find(name) != defFunctions->end()) {
+            defFunctions->erase(name);
+        }
+    }
+
     bool RPNCompiler::isVarDefined(const string & name) {
         return defVars->find(name) != defVars->end();
+    }
+
+    bool RPNCompiler::isFnDefined(const string &name) {
+        return defFunctions->find(name) != defFunctions->end();
     }
 
     double RPNCompiler::getVar(const string & varName) {
@@ -1014,6 +1108,10 @@ namespace virtualfpu {
 
     }
 
+    void RPNCompiler::clearAllCustomFunctions() {
+        defFunctions->clear();
+    }
+
     void RPNCompiler::init(size_t stackSize) {
 
         if (stackSize <= 0) {
@@ -1024,6 +1122,7 @@ namespace virtualfpu {
 
 
         defVars = new map<string, double>();
+        defFunctions = new map<string, std::function<double(double) >>();
 
     }
 
