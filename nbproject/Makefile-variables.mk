@@ -22,14 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/virtualfpu
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
 CND_PACKAGE_NAME_Release=virtualfpu.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/virtualfpu.tar
-# tests configuration
-CND_PLATFORM_tests=GNU-Linux
-CND_ARTIFACT_DIR_tests=dist/tests/GNU-Linux
-CND_ARTIFACT_NAME_tests=virtualfpu
-CND_ARTIFACT_PATH_tests=dist/tests/GNU-Linux/virtualfpu
-CND_PACKAGE_DIR_tests=dist/tests/GNU-Linux/package
-CND_PACKAGE_NAME_tests=virtualfpu.tar
-CND_PACKAGE_PATH_tests=dist/tests/GNU-Linux/package/virtualfpu.tar
 #
 # include compiler specific variables
 #
