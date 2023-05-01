@@ -85,7 +85,9 @@ int main(int argc, char** argv) {
             {"3^2/9",1},
             {"3^2^2",81},
             {"1-2.56^(sin(8/9))",1-2.0746557603876212},
-            {"4sin(2.3)-5cos(2.2)/6sin(1.1)",3.419884621292166}
+            {"4sin(2.3)-5cos(2.2)/6sin(1.1)",3.419884621292166},
+            {"4 + 5*sin(cos(12sqrt(8+32+5)))",5.846170068808339},
+            
         };
 
         for (auto const& [key, val] : statements) {
@@ -142,8 +144,10 @@ int main(int argc, char** argv) {
         fpu.defineVar("x",3);
         fpu.compile("3.4*x^4-1*x^3+2*x^2-x-1");
         tests::expect_num(fpu.evaluate(),262.4,"Error evaluating polynomial expression");
-                
         
+        fpu.compile("2x^2/(4x-x^3.1)");
+        tests::expect_num(fpu.evaluate(),-0.992538005594048,"Error");       
+                                
         
         cout<<"TESTS SUCCESS!"<<endl;
 
