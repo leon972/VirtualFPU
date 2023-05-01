@@ -49,7 +49,7 @@ namespace virtualfpu {
      * Available operators and functions
      */
     enum Instruction {
-        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, SQRT, SIN, COS
+        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV,POW, SQRT, SIN, COS
     };
 
     class VirtualFPUException: public std::exception {
@@ -253,6 +253,9 @@ namespace virtualfpu {
         bool reduceStack(std::vector<StackItem*> &stack);
 
         double getValue(StackItem *operand);
+        
+        void addImpliedMul(vector<StackItem*> *stack);
+        void addImpliedMul(stack<StackItem*> *stack);
         
         void throwError(const string &msg);
 

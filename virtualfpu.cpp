@@ -106,7 +106,10 @@ namespace virtualfpu {
             instr = DIV;
         } else if (opstr == "*") {
             instr = MUL;
-        } else if (opstr == "cos") {
+        } else if (opstr=="^") {
+            instr=POW;
+        }
+        else if (opstr == "cos") {
             instr = COS;
         } else if (opstr == "sin") {
             instr = SIN;
@@ -185,12 +188,14 @@ namespace virtualfpu {
                 return 4;
             case DIV:
                 return 5;
-            case UNARY_MINUS:
+            case POW:
                 return 6;
+            case UNARY_MINUS:
+                return 7;
             case COS:
             case SIN:
             case SQRT:
-                return 8;
+                return 10;
 
             default:
                 return -1;
@@ -299,11 +304,8 @@ namespace virtualfpu {
 
                         if (s->instr == PAR_OPEN) {
                             matchingParFound = true;
-                            temp.pop();
-                            //  if (!temp.empty() && isFunction(temp.top()->instr)) {
-                            break;
-                            //  }
-                            // break;
+                            temp.pop();                           
+                            break;                           
                         } else {
                             instrVector->push_back(s);
                             temp.pop();
@@ -312,15 +314,7 @@ namespace virtualfpu {
                         if (temp.empty()) {
                             break;
                         }
-                    }
-
-                    /**     if (!matchingParFound) {
-
-                             ostringstream ss;
-                             ss << "Missing matching bracket at index " << idx;
-                             throwError(ss.str());
-                         }*/
-
+                    }                 
                 }
 
 
@@ -392,7 +386,8 @@ namespace virtualfpu {
                     ss << "Invalid function sequence " << token << " at index " << idx;
                     //due operatori successivi
                     throwError(ss.str());
-                }
+                }               
+              
 
 
                 StackItem *opItem = new StackItem();
@@ -424,13 +419,18 @@ namespace virtualfpu {
                 }
 
                 temp.push(opItem);
-
+                
+                if (last==TK_NUM)
+                {                    
+                    addImpliedMul(&temp);                                                        
+                }
 
                 last = TK_FUNCTION;
 
 
             } else if (isVarDefined(token)) {
 
+                
                 //variable defined in the lookup table
 
                 StackItem *s = new StackItem();
@@ -438,6 +438,11 @@ namespace virtualfpu {
                 s->value = getVar(token);
                 s->defVar = token;
                 instrVector->push_back(s);
+                
+                if (last==TK_NUM)
+                {
+                    addImpliedMul(instrVector);
+                }
                 last = TK_NUM;
 
             } else {
@@ -466,6 +471,25 @@ namespace virtualfpu {
 
         return *this;
     }
+    
+    void RPNCompiler::addImpliedMul(vector<StackItem*> *stack)
+    {
+          StackItem *mulItem = new StackItem();
+          mulItem->instr=MUL;        
+          mulItem->value=0;
+          mulItem->defVar="";
+          stack->push_back(mulItem);
+        
+    }
+    
+    void RPNCompiler::addImpliedMul(stack<StackItem*> *stack)
+    {
+          StackItem *mulItem = new StackItem();
+          mulItem->instr=MUL;        
+          mulItem->value=0;
+          mulItem->defVar="";
+          stack->push(mulItem);        
+    }
 
     const string& RPNCompiler::getLastCompiledStatement() {
         return last_compiled_statement;
@@ -484,7 +508,7 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::isOperator(const Instruction instr) {
-        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS;
+        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS || instr==POW;
     }
 
     bool RPNCompiler::isFunction(const string& token) {
@@ -579,19 +603,20 @@ namespace virtualfpu {
         const size_t lu = statement.length();
 
         if (fromIndex > lu) return "";
-
         int idx = fromIndex;
-
         ostringstream ss;
-
         int state = 0;
+        bool last_num=false;
+        bool last_alpha=false;
 
         while (idx < lu) {
 
             char ch = statement[idx];
 
-            if (ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '/' || ch == '*') {
-
+            if (ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '/' || ch == '*' || ch=='^') {
+                
+                last_num=last_alpha=false;
+                
                 if (state == 1) {
                     break;
                 } else {
@@ -601,20 +626,51 @@ namespace virtualfpu {
                 }
 
             } else if (ch == ' ') {
+                
+                last_num=last_alpha=false;
+                
                 //skip
                 ++idx;
                 if (state == 1) {
                     break;
                 }
-            } else if (isalnum(ch) || ch == '.' || ch == ',') {
-
+            } else if (isalpha(ch)) {
+                
+                if (last_num && !last_alpha)
+                {
+                    break;                    
+                }
+                
+                last_num=false;
+                last_alpha=isalpha(ch);
+                
                 state = 1;
                 ss << ch;
                 ++idx;
 
-            } else {
-
-                //simbolo non valido
+            } else if (ch=='.')
+            {
+                last_num=false;
+                last_alpha=false;
+                
+                state = 1;
+                ss << ch;
+                ++idx;                
+            }            
+            else if (isdigit(ch))
+            {
+                last_num=true;
+                last_alpha=false;
+                state = 1;
+                ss << ch;
+                ++idx;                
+            }            
+            else {
+              
+                last_num=false;
+                last_alpha=false;
+                
+                //invalid
                 ss << ch;
                 ++idx;
                 break;
@@ -654,6 +710,7 @@ namespace virtualfpu {
                     case SUB:
                     case DIV:
                     case MUL:
+                    case POW:    
                     {
                         --i;
                         if (i < 0) {
@@ -761,6 +818,8 @@ namespace virtualfpu {
                 break;
             case DIV:
                 return getValue(op1) / getValue(op2);
+            case POW:
+                return pow(getValue(op1),getValue(op2));
             default:
                 throwError("Unsupported function for two operands");
                 return 0.0;
