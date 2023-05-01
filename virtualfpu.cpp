@@ -214,8 +214,15 @@ namespace virtualfpu {
                 return 4;
             case Instruction::DIV:
                 return 5;
-            case Instruction::UNARY_MINUS:
+            case POW:
                 return 6;
+            case UNARY_MINUS:
+                return 7;
+            case COS:
+            case SIN:
+            case SQRT:
+                return 10;
+
             default:
                 if (isFunction(instr)) {
                     return 8;
@@ -240,13 +247,13 @@ namespace virtualfpu {
 
         const int lu = statement.length();
 
-        const int TK_NIL = 0;
+     /**   const int TK_NIL = 0;
         const int TK_NUM = 1;
         const int TK_OPERATOR = 2;
         const int TK_FUNCTION = 3;
         const int TK_OPEN_BRK = 4;
         const int TK_CLOSE_BRK = 5;
-        const int TK_OTHER = 255;
+        const int TK_OTHER = 255;*/
 
         if (lu == 0) {
             throwError(err + "expression is empty");
@@ -328,10 +335,7 @@ namespace virtualfpu {
                         if (s->instr == Instruction::PAR_OPEN) {
                             matchingParFound = true;
                             temp.pop();
-                            //  if (!temp.empty() && isFunction(temp.top()->instr)) {
                             break;
-                            //  }
-                            // break;
                         } else {
                             instrVector->push_back(s);
                             temp.pop();
@@ -341,14 +345,6 @@ namespace virtualfpu {
                             break;
                         }
                     }
-
-                    /**     if (!matchingParFound) {
-
-                             ostringstream ss;
-                             ss << "Missing matching bracket at index " << idx;
-                             throwError(ss.str());
-                         }*/
-
                 }
 
 
@@ -422,42 +418,54 @@ namespace virtualfpu {
                     throwError(ss.str());
                 }
 
+                if (last == TK_NUM) {
+                    addImpliedMul(temp,last);
+                    last=TK_OPERATOR;
+                }
+
 
                 StackItem *opItem = new StackItem();
                 opItem->fromString(token);
 
-                if (!temp.empty()) {
-
-                    for (;;) {
-
-                        //gestione precedenza operatori
-                        StackItem* topOp = temp.top();
-
-                        if (topOp->instr == Instruction::PAR_OPEN) {
-                            break;
-                        }
-
-                        if (getOperatorPrecedence(topOp->instr) > getOperatorPrecedence(opItem->instr)) {
-
-                            instrVector->push_back(topOp);
-                            temp.pop();
-
-                        } else {
-                            break;
-                        }
-
-                        if (temp.empty()) break;
-                    }
-
-                }
-
-                temp.push(opItem);
-
+//                if (!temp.empty()) {
+//
+//                    for (;;) {
+//
+//                        //gestione precedenza operatori
+//                        StackItem* topOp = temp.top();
+//
+//                        if (topOp->instr == PAR_OPEN) {
+//                            break;
+//                        }
+//
+//                        if (getOperatorPrecedence(topOp->instr) > getOperatorPrecedence(opItem->instr)) {
+//
+//                            instrVector->push_back(topOp);
+//                            temp.pop();
+//
+//                        } else {
+//                            break;
+//                        }
+//
+//                        if (temp.empty()) break;
+//                    }
+//
+//                }
+//
+//                temp.push(opItem);
+                
+                addItemToTempStack(opItem,temp,last);               
+             
 
                 last = TK_FUNCTION;
 
 
             } else if (isVarDefined(token)) {
+                
+                if (last == TK_NUM) {
+                    addImpliedMul(temp,last);
+                    last=TK_OPERATOR;
+                }
 
                 //variable defined in the lookup table
 
@@ -466,6 +474,8 @@ namespace virtualfpu {
                 s->value = getVar(token);
                 s->defVar = token;
                 instrVector->push_back(s);
+
+             
                 last = TK_NUM;
 
             } else {
@@ -495,6 +505,58 @@ namespace virtualfpu {
         return *this;
     }
 
+    void RPNCompiler::addItemToTempStack(StackItem *opItem, stack<StackItem*> &temp, const int last) {
+        
+        if (!temp.empty()) {
+
+            if (opItem->instr == SUB && (temp.top()->instr == PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM && last != TK_CLOSE_BRK) {
+                opItem->instr = UNARY_MINUS;
+            }
+
+            for (;;) {
+
+                //gestione precedenza operatori
+                StackItem* topOp = temp.top();
+
+                if (topOp->instr == PAR_OPEN) {
+                    break;
+                }
+
+                if (getOperatorPrecedence(topOp->instr) >= getOperatorPrecedence(opItem->instr)) {
+
+                    instrVector->push_back(topOp);
+                    temp.pop();
+
+                } else {
+                    break;
+                }
+
+                if (temp.empty()) break;
+            }
+
+        } else {
+
+            if (opItem->instr == SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
+                //se lo stack è vuoto ed è un meno allora è un meno unario
+                opItem->instr = UNARY_MINUS;
+            }
+
+        }
+
+        temp.push(opItem);
+
+    }
+
+    void RPNCompiler::addImpliedMul(stack<StackItem*> &temp,const int last) {
+        StackItem *mulItem = new StackItem();
+        mulItem->instr = MUL;
+        mulItem->value = 0;
+        mulItem->defVar = "";
+        addItemToTempStack(mulItem,temp,last);    
+
+    }
+    
+
     const string& RPNCompiler::getLastCompiledStatement() {
         return last_compiled_statement;
     }
@@ -512,7 +574,7 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::isOperator(const Instruction instr) {
-        return instr == Instruction::MUL || instr == Instruction::DIV || instr == Instruction::SUB || instr == Instruction::ADD || instr == Instruction::UNARY_MINUS;
+        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS || instr == POW;
     }
 
     bool RPNCompiler::isFunction(const string& token) {
@@ -607,18 +669,19 @@ namespace virtualfpu {
         const size_t lu = statement.length();
 
         if (fromIndex > lu) return "";
-
         int idx = fromIndex;
-
         ostringstream ss;
-
         int state = 0;
+        bool last_num = false;
+        bool last_alpha = false;
 
         while (idx < lu) {
 
             char ch = statement[idx];
 
-            if (ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '/' || ch == '*') {
+            if (ch == '(' || ch == ')' || ch == '+' || ch == '-' || ch == '/' || ch == '*' || ch == '^') {
+
+                last_num = last_alpha = false;
 
                 if (state == 1) {
                     break;
@@ -629,20 +692,48 @@ namespace virtualfpu {
                 }
 
             } else if (ch == ' ') {
+
+                last_num = last_alpha = false;
+
                 //skip
                 ++idx;
                 if (state == 1) {
                     break;
                 }
-            } else if (isalnum(ch) || ch == '.' || ch == ',') {
+            } else if (isalpha(ch)) {
+
+                if (last_num && !last_alpha) {
+                    break;
+                }
+
+                last_num = false;
+                last_alpha = isalpha(ch);
 
                 state = 1;
                 ss << ch;
                 ++idx;
 
-            } else {
+            } else if (ch == '.') {
+                last_num = false;
+                last_alpha = false;
 
-                //simbolo non valido
+                state = 1;
+                ss << ch;
+                ++idx;
+            }
+            else if (isdigit(ch)) {
+                last_num = true;
+                last_alpha = false;
+                state = 1;
+                ss << ch;
+                ++idx;
+            }
+            else {
+
+                last_num = false;
+                last_alpha = false;
+
+                //invalid
                 ss << ch;
                 ++idx;
                 break;
@@ -668,6 +759,30 @@ namespace virtualfpu {
                 if (op1->instr != Instruction::VALUE) {
                     throwError("Invalid stack:found operation without operand.");
                 }
+                switch (item->instr) {
+                    case UNARY_MINUS:
+                    case COS:
+                    case SIN:
+                    case SQRT:
+                        evaluateUnary(op1, item);
+                        op1->defVar = ""s;
+                        delete stack[lu - 1];
+                        stack.pop_back();
+                        return true;
+                    case ADD:
+                    case SUB:
+                    case DIV:
+                    case MUL:
+                    case POW:
+                    {
+                        --i;
+                        if (i < 0) {
+                            throwError("Invalid stack:missing second operand");
+                        }
+                        StackItem *op2 = stack[i];
+                        if (op2->instr != VALUE) {
+                            throwError("Invalid stack:value expected.");
+                        }
 
                 if (isFunction(item->instr) || item->instr == Instruction::UNARY_MINUS) {
 
@@ -799,6 +914,8 @@ namespace virtualfpu {
                 break;
             case DIV:
                 return getValue(op1) / getValue(op2);
+            case POW:
+                return pow(getValue(op1), getValue(op2));
             default:
                 throwError("Unsupported function for two operands");
                 return 0.0;

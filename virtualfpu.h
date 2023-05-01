@@ -245,7 +245,15 @@ namespace virtualfpu {
         static bool isBuiltinFunction(const Instruction& instr) noexcept;
 
     private:
-
+        
+        const int TK_NIL = 0;
+        const int TK_NUM = 1;
+        const int TK_OPERATOR = 2;
+        const int TK_FUNCTION = 3;
+        const int TK_OPEN_BRK = 4;
+        const int TK_CLOSE_BRK = 5;
+        const int TK_OTHER = 255;
+        
         string last_compiled_statement;
 
         void init(size_t stackSize);
@@ -257,7 +265,10 @@ namespace virtualfpu {
         bool reduceStack(std::vector<StackItem*> &stack);
 
         double getValue(StackItem *operand);
-
+        
+        void addImpliedMul(stack<StackItem*> &temp,const int last);
+         void addItemToTempStack(StackItem *item,stack<StackItem*> &stack,const int last);
+        
         void throwError(const string &msg);
 
     };

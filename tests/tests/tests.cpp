@@ -32,8 +32,18 @@ int main(int argc, char** argv) {
 
         tests::print_test_title("RPN Compiler tests");
 
-        RPNCompiler fpu;     
+        RPNCompiler fpu;      
         
+       // fpu.compile("2.1*(1+1)");
+      //  cout<<fpu.evaluate()<<endl;
+        
+         fpu.compile("4sin(2.1)");
+         cout<<fpu.getRPNStack()<<endl;
+         cout<<fpu.evaluate()<<endl;
+        cout<<fpu.evaluate()<<endl;
+        
+        cout<<"-------------------------"<<endl;
+      
         fpu.defineVar("g",10);      
         fpu.compile("g*g-2");
         cout<<fpu.getRPNStack()<<endl;
@@ -50,6 +60,7 @@ int main(int argc, char** argv) {
         tests::expect_num(fpu.evaluate(), 2.0, "1+1 error", "1+1 OK");
 
         map<string, double> statements = {
+            {"2^2",4},
             {"2*(3*(2*(7-2*(3-2))))", 60},
             {"5*(3+7)+10", 60},
             {"1/(2+7-8+4+5)", 0.1},
@@ -70,7 +81,13 @@ int main(int argc, char** argv) {
             {"3*((2-5))", -9},
             {"-(5+2)", -7},
             {"-3*(-2*(4/2))-2)",10},
-            {"(7-2)/(1+1)",2.5}
+            {"(7-2)/(1+1)",2.5},
+            {"3^2/9",1},
+            {"3^2^2",81},
+            {"1-2.56^(sin(8/9))",1-2.0746557603876212},
+            {"4sin(2.3)-5cos(2.2)/6sin(1.1)",3.419884621292166},
+            {"4 + 5*sin(cos(12sqrt(8+32+5)))",5.846170068808339},
+            
         };
 
         for (auto const& [key, val] : statements) {
@@ -124,6 +141,13 @@ int main(int argc, char** argv) {
         fpu.compile("3*x*x*x-2*y*y/x");
         tests::expect_num(fpu.evaluate(),3*x*x*x-2*y*y/x,"failed to evalute using def var x,y","OK expression x,y");
         
+        fpu.defineVar("x",3);
+        fpu.compile("3.4*x^4-1*x^3+2*x^2-x-1");
+        tests::expect_num(fpu.evaluate(),262.4,"Error evaluating polynomial expression");
+        
+        fpu.compile("2x^2/(4x-x^3.1)");
+        tests::expect_num(fpu.evaluate(),-0.992538005594048,"Error");       
+                                
         
         cout<<"TESTS SUCCESS!"<<endl;
 
