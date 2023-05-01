@@ -94,13 +94,13 @@ namespace virtualfpu {
                 return atan(val);
             }},
         {Instruction::COSH, [](double val) {
-                return sinh(val);
+                return cosh(val);
             }},
         {Instruction::SINH, [](double val) {
                 return sinh(val);
             }},
         {Instruction::TANH, [](double val) {
-                return sinh(val);
+                return tanh(val);
             }},
         {Instruction::ASINH, [](double val) {
                 return asinh(val);

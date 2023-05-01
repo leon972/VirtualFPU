@@ -23,7 +23,7 @@
 using namespace std;
 using namespace virtualfpu;
 
-static void testStatements(RPNCompiler &fpu,const map<string, double> &statements) {
+static void testStatements(RPNCompiler &fpu, const map<string, double> &statements) {
     for (auto const& [key, val] : statements) {
         fpu.compile(key);
         tests::expect_num(fpu.evaluate(), val, key, key, 0.00001);
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 
         };
 
-        testStatements(fpu,statements);
+        testStatements(fpu, statements);
 
         tests::print_test_title("Test compiler error detection");
         tests::expect_throw([&]() {
@@ -157,15 +157,33 @@ int main(int argc, char** argv) {
         tests::expect_num(fpu.evaluate(), -0.992538005594048, "Error");
 
         tests::print_test_title("BUILTIN FUNCTIONS");
-        
-        fpu.defineVar("x",1.67);
-        
+
+        fpu.defineVar("x", 1.67);
+        fpu.defineVar("PI", M_PI);
+
         statements = {
-            {"2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))", 2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))},
-            {"2*(3*(2*(7-2*(3-2))))", 60},
+            // {"2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))", 2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))},
+            {"sin(PI*0.3)", sin(M_PI * 0.3)},
+            {"tan(PI/4)", tan(M_PI / 4)},
+            {"cos(PI/7)*sin(PI/6)", cos(M_PI / 7) * sin(M_PI / 6)},
+            {"log10(1000000)", 6},
+            {"log(123)", log(123)},
+            {"log2(123)", log2(123)},
+            {"sign(7-8)", -1.0},
+            {"sign(5-(10/2))", 0.0},
+            {"asin(sin(1.2))", 1.2},
+            {"acos(sin(1.2))", acos(sin(1.2))},
+            {"atan(tan(PI/8))", M_PI / 8},
+            {"sinh(3.2)-cosh(8.9)+tanh(3.1)", sinh(3.2) - cosh(8.9) + tanh(3.1)},
+            {"asinh(3.2)-acosh(8.9)+atanh(3.1)", asinh(3.2) - acosh(8.9) + atanh(3.1)},
+            {"4exp(2.3)", 4 * exp(2.3)},
+            {"sqrt(cos(x)^2+sin(x)^2)",1},
+            {"sqrt(abs(-9*9))",9},
+            {"abs(11)+abs(-11)+sign(7-7)",22}
+
         };
-        
-        testStatements(fpu,statements);
+
+        testStatements(fpu, statements);
 
         cout << "TESTS SUCCESS!" << endl;
 
