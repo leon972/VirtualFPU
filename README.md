@@ -19,7 +19,7 @@ Internally uses a RPN (Reverse Polish Notation) stack to evalute the expression.
 All values are treated as C++ double (no template supported yet!)
 
 - available operators:
-  + addition, - subtraction, * multiplication, / division, - unary minus, ^ power
+  \+ addition, - subtraction, * multiplication, / division, - unary minus, ^ power
 - available built-in functions
   sin,cos,tan,asin,acos,atan,sinh,cosh,acosh,atanh,exp (base-e exponential function),log (natural logarithm), log10 (base 10 loh),log2 (base 2 log),sign (signum)  
   
@@ -42,6 +42,32 @@ All values are treated as C++ double (no template supported yet!)
     std::cout<<fpu.evaluate()<<std::endl;   //now prints 5                     
 
 ```
+
+- custom defined functions
+ Define any number of custom functions with a single double argument and returning a double:
+
+```
+    
+     RPNCompiler fpu; 
+
+     fpu.defineFunction("cube", [](double v) {
+            return v*v*v;
+     });
+        
+     fpu.defineFunction("inv", [](double v) {
+            return 1/v;
+     });
+
+     //compile a statement using the custom functions
+     fpu.compile("cube(3)/4+5/cube(2)-1/(1-inv(cube(2)))")
+
+     std::cout<<fpu.evaluate()<<std::endl;
+
+
+```
+
+
+
 # Include in your program
 
 Warning! A C++20 compliant compiler is required
