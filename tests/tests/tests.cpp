@@ -23,6 +23,13 @@
 using namespace std;
 using namespace virtualfpu;
 
+static void testStatements(RPNCompiler &fpu,const map<string, double> &statements) {
+    for (auto const& [key, val] : statements) {
+        fpu.compile(key);
+        tests::expect_num(fpu.evaluate(), val, key, key, 0.00001);
+    }
+}
+
 /*
  * 
  */
@@ -32,22 +39,22 @@ int main(int argc, char** argv) {
 
         tests::print_test_title("RPN Compiler tests");
 
-        RPNCompiler fpu;      
-        
-       // fpu.compile("2.1*(1+1)");
-      //  cout<<fpu.evaluate()<<endl;
-        
-         fpu.compile("4sin(2.1)");
-         cout<<fpu.getRPNStack()<<endl;
-         cout<<fpu.evaluate()<<endl;
-        cout<<fpu.evaluate()<<endl;
-        
-        cout<<"-------------------------"<<endl;
-      
-        fpu.defineVar("g",10);      
+        RPNCompiler fpu;
+
+        // fpu.compile("2.1*(1+1)");
+        //  cout<<fpu.evaluate()<<endl;
+
+        fpu.compile("4sin(2.1)");
+        cout << fpu.getRPNStack() << endl;
+        cout << fpu.evaluate() << endl;
+        cout << fpu.evaluate() << endl;
+
+        cout << "-------------------------" << endl;
+
+        fpu.defineVar("g", 10);
         fpu.compile("g*g-2");
-        cout<<fpu.getRPNStack()<<endl;
-        cout<<"RESULT="<<fpu.evaluate()<<endl;
+        cout << fpu.getRPNStack() << endl;
+        cout << "RESULT=" << fpu.evaluate() << endl;
 
         fpu.compile("5*(3+7)+10");
         cout << fpu.getRPNStack() << endl;
@@ -60,7 +67,7 @@ int main(int argc, char** argv) {
         tests::expect_num(fpu.evaluate(), 2.0, "1+1 error", "1+1 OK");
 
         map<string, double> statements = {
-            {"2^2",4},
+            {"2^2", 4},
             {"2*(3*(2*(7-2*(3-2))))", 60},
             {"5*(3+7)+10", 60},
             {"1/(2+7-8+4+5)", 0.1},
@@ -80,76 +87,87 @@ int main(int argc, char** argv) {
             {"1+1+1+1+1+1", 6},
             {"3*((2-5))", -9},
             {"-(5+2)", -7},
-            {"-3*(-2*(4/2))-2)",10},
-            {"(7-2)/(1+1)",2.5},
-            {"3^2/9",1},
-            {"3^2^2",81},
-            {"1-2.56^(sin(8/9))",1-2.0746557603876212},
-            {"4sin(2.3)-5cos(2.2)/6sin(1.1)",3.419884621292166},
-            {"4 + 5*sin(cos(12sqrt(8+32+5)))",5.846170068808339},
-            
+            {"-3*(-2*(4/2))-2)", 10},
+            {"(7-2)/(1+1)", 2.5},
+            {"3^2/9", 1},
+            {"3^2^2", 81},
+            {"1-2.56^(sin(8/9))", 1 - 2.0746557603876212},
+            {"4sin(2.3)-5cos(2.2)/6sin(1.1)", 3.419884621292166},
+            {"4 + 5*sin(cos(12sqrt(8+32+5)))", 5.846170068808339},
+
         };
 
-        for (auto const& [key, val] : statements) {
-            fpu.compile(key);
-            tests::expect_num(fpu.evaluate(), val, key, key, 0.00001);
-        }
-        
+        testStatements(fpu,statements);
+
         tests::print_test_title("Test compiler error detection");
-        tests::expect_throw([&](){fpu.compile("4**6");},"error not detected","error detected",true);
-        tests::expect_throw([&](){fpu.compile("4*(2-(2-2)");},"error not detected","error detected",true);
-        tests::expect_throw([&](){fpu.compile("akjs4*(2-(2-2)");},"error not detected","error detected",true);
-        
+        tests::expect_throw([&]() {
+            fpu.compile("4**6");
+        }, "error not detected", "error detected", true);
+        tests::expect_throw([&]() {
+            fpu.compile("4*(2-(2-2)");
+        }, "error not detected", "error detected", true);
+        tests::expect_throw([&]() {
+            fpu.compile("akjs4*(2-(2-2)");
+        }, "error not detected", "error detected", true);
+
         tests::print_test_title("Test custom variables");
-        
+
         fpu.clearStack();
-        tests::expect_equals(fpu.getRPNStack(),""s,"Stack not cleared"s);
-        fpu.defineVar("g",9.81);
-        tests::expect_true(fpu.isVarDefined("g"),"var defined not detected"s,"OK var defined"s);
-        tests::expect_num(fpu.getVar("g"),9.81,"var value not valid"s,"OK set var"s);
-        tests::expect_num(fpu.getVar("g"),9.81,"var value not valid"s,"OK set var"s);
+        tests::expect_equals(fpu.getRPNStack(), ""s, "Stack not cleared"s);
+        fpu.defineVar("g", 9.81);
+        tests::expect_true(fpu.isVarDefined("g"), "var defined not detected"s, "OK var defined"s);
+        tests::expect_num(fpu.getVar("g"), 9.81, "var value not valid"s, "OK set var"s);
+        tests::expect_num(fpu.getVar("g"), 9.81, "var value not valid"s, "OK set var"s);
         fpu.compile("g*g-2");
-        tests::expect_num(fpu.evaluate(),94.2361,"error evaluating using custom variable"s,"OK calc with defned var");
-        
+        tests::expect_num(fpu.evaluate(), 94.2361, "error evaluating using custom variable"s, "OK calc with defned var");
+
         fpu.undefVar("g");
-        tests::expect_false(fpu.isVarDefined("g"),"Error undefine var","OK undefine var");
-        
-        fpu.defineVar("x",0);
-        fpu.defineVar("y",0);
-        
+        tests::expect_false(fpu.isVarDefined("g"), "Error undefine var", "OK undefine var");
+
+        fpu.defineVar("x", 0);
+        fpu.defineVar("y", 0);
+
         fpu.compile("(x+y)*(x-y)");
-        
-        for (double x=-10;x<10;x+=0.5)
-        {
-            for (double y=x;y<x+10;y+=0.5)
-            {
-                fpu.defineVar("x",x);
-                fpu.defineVar("y",y);
-                const auto value=(x+y)*(x-y);
-                const auto evaluated=fpu.evaluate();
-                cout<<"x="<<x<<" y="<<y<<" evaluated="<<fpu.evaluate()<<" actual value="<<value<<endl;
-                tests::expect_num(evaluated,value,"failed calc with x,y");                
-            }            
-        }        
-        
-        double x=3.45;
-        double y=-1.2;
-        fpu.defineVar("x",x);
-        fpu.defineVar("y",y);        
+
+        for (double x = -10; x < 10; x += 0.5) {
+            for (double y = x; y < x + 10; y += 0.5) {
+                fpu.defineVar("x", x);
+                fpu.defineVar("y", y);
+                const auto value = (x + y)*(x - y);
+                const auto evaluated = fpu.evaluate();
+                cout << "x=" << x << " y=" << y << " evaluated=" << fpu.evaluate() << " actual value=" << value << endl;
+                tests::expect_num(evaluated, value, "failed calc with x,y");
+            }
+        }
+
+        double x = 3.45;
+        double y = -1.2;
+        fpu.defineVar("x", x);
+        fpu.defineVar("y", y);
         fpu.compile("sin((x+y)/2)*cos((x-y)/2)");
-        tests::expect_num(fpu.evaluate(),sin((x+y)/2)*cos((x-y)/2),"failed to evalute using def var x,y","OK expression x,y");
+        tests::expect_num(fpu.evaluate(), sin((x + y) / 2) * cos((x - y) / 2), "failed to evalute using def var x,y", "OK expression x,y");
         fpu.compile("3*x*x*x-2*y*y/x");
-        tests::expect_num(fpu.evaluate(),3*x*x*x-2*y*y/x,"failed to evalute using def var x,y","OK expression x,y");
-        
-        fpu.defineVar("x",3);
+        tests::expect_num(fpu.evaluate(), 3 * x * x * x - 2 * y * y / x, "failed to evalute using def var x,y", "OK expression x,y");
+
+        fpu.defineVar("x", 3);
         fpu.compile("3.4*x^4-1*x^3+2*x^2-x-1");
-        tests::expect_num(fpu.evaluate(),262.4,"Error evaluating polynomial expression");
-        
+        tests::expect_num(fpu.evaluate(), 262.4, "Error evaluating polynomial expression");
+
         fpu.compile("2x^2/(4x-x^3.1)");
-        tests::expect_num(fpu.evaluate(),-0.992538005594048,"Error");       
-                                
+        tests::expect_num(fpu.evaluate(), -0.992538005594048, "Error");
+
+        tests::print_test_title("BUILTIN FUNCTIONS");
         
-        cout<<"TESTS SUCCESS!"<<endl;
+        fpu.defineVar("x",1.67);
+        
+        statements = {
+            {"2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))", 2.1*tan(sin(1.22*2)-cos(2.1)+asin(0.7)-acos(0.89)+log(12)-log10(122)+x*log2(64)-sinh(12)+cosh(1)-tanh(2.5))},
+            {"2*(3*(2*(7-2*(3-2))))", 60},
+        };
+        
+        testStatements(fpu,statements);
+
+        cout << "TESTS SUCCESS!" << endl;
 
 
     } catch (std::exception &e) {

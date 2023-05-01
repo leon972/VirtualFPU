@@ -41,6 +41,7 @@
 #include <ostream>
 #include <vector>
 #include <cmath>
+#include <functional>
 
 
 
@@ -54,16 +55,86 @@ namespace virtualfpu {
         Instruction::ASINH, Instruction::ATAN, Instruction::ATANH, Instruction::COS,
         Instruction::COSH, Instruction::EXP,
         Instruction::LOG, Instruction::LOG10, Instruction::LOG2,
-        Instruction::MUL, Instruction::SIGN, Instruction::SIN,
+        Instruction::SIGN, Instruction::SIN,
         Instruction::SINH, Instruction::SQRT, Instruction::TAN, Instruction::TANH
     };
 
-    static std::map<Instruction, string> symToStr = {
+    static std::map<Instruction, std::function<double(double) >> oneArgFunctions = {
+        {Instruction::UNARY_MINUS, [](double val) {
+                return -val;
+            }},
+        {Instruction::SIGN, [](double val) {
+                if (val > 0) {
+                    return 1.0;
+                } else if (val < 0) {
+                    return -1.0;
+                } else {
+                    return 0.0;
+                }
+            }},
+        {Instruction::ABS, [](double val) {
+                return fabs(val);
+            }},
+        {Instruction::COS, [](double val) {
+                return cos(val);
+            }},
+        {Instruction::SIN, [](double val) {
+                return sin(val);
+            }},
+        {Instruction::TAN, [](double val) {
+                return tan(val);
+            }},
+        {Instruction::ACOS, [](double val) {
+                return acos(val);
+            }},
+        {Instruction::ASIN, [](double val) {
+                return asin(val);
+            }},
+        {Instruction::ATAN, [](double val) {
+                return atan(val);
+            }},
+        {Instruction::COSH, [](double val) {
+                return sinh(val);
+            }},
+        {Instruction::SINH, [](double val) {
+                return sinh(val);
+            }},
+        {Instruction::TANH, [](double val) {
+                return sinh(val);
+            }},
+        {Instruction::ASINH, [](double val) {
+                return asinh(val);
+            }},
+        {Instruction::ACOSH, [](double val) {
+                return acosh(val);
+            }},
+        {Instruction::ATANH, [](double val) {
+                return atanh(val);
+            }},
+        {Instruction::EXP, [](double val) {
+                return exp(val);
+            }},
+        {Instruction::LOG, [](double val) {
+                return log(val);
+            }},
+        {Instruction::LOG10, [](double val) {
+                return log10(val);
+            }},
+        {Instruction::LOG2, [](double val) {
+                return log2(val);
+            }},
+        {Instruction::SQRT, [](double val) {
+                return sqrt(val);
+            }}
+    };
+
+    static std::map<Instruction, string> symToStr ={
         {Instruction::UNARY_MINUS, "[-]"},
         {Instruction::ADD, "+"},
         {Instruction::SUB, "-"},
         {Instruction::MUL, "*"},
         {Instruction::DIV, "/"},
+        {Instruction::POW, "^"},
         {Instruction::SQRT, "sqrt"},
         {Instruction::COS, "cos"},
         {Instruction::SIN, "sin"},
@@ -85,7 +156,7 @@ namespace virtualfpu {
         {Instruction::SIGN, "sign"}
     };
 
-    static std::map<string, Instruction> strToSymbol = {
+    static std::map<string, Instruction> strToSymbol ={
         {"[-]", Instruction::UNARY_MINUS},
         {"(", Instruction::PAR_OPEN},
         {")", Instruction::PAR_CLOSE},
@@ -93,6 +164,7 @@ namespace virtualfpu {
         {"-", Instruction::SUB},
         {"*", Instruction::MUL},
         {"/", Instruction::DIV},
+        {"^", Instruction::POW},
         {"sqrt", Instruction::SQRT},
         {"cos", Instruction::COS},
         {"sin", Instruction::SIN},
@@ -117,7 +189,7 @@ namespace virtualfpu {
 
     /////////////////////// StackItem ////////////////////////////////////////////
 
-    ostream& operator<<(ostream& ostr, const StackItem& item) {
+    ostream& operator<<(ostream& ostr, const StackItem & item) {
 
         if (item.instr == Instruction::VALUE) {
             if (!item.defVar.empty()) {
@@ -135,7 +207,7 @@ namespace virtualfpu {
 
     }
 
-    void StackItem::fromString(const string& opstr) {
+    void StackItem::fromString(const string & opstr) {
 
         if (strToSymbol.contains(opstr)) {
             instr = strToSymbol[opstr];
@@ -146,7 +218,7 @@ namespace virtualfpu {
 
     }
 
-    StackItem* StackItem::clone() {
+    StackItem * StackItem::clone() {
         StackItem *s = new StackItem();
         s->value = this->value;
         s->instr = this->instr;
@@ -156,7 +228,7 @@ namespace virtualfpu {
 
     ////////////////////// VirtualFPUException ////////////////////////////////////
 
-    VirtualFPUException::VirtualFPUException(const string& msg) : msg(msg) {
+    VirtualFPUException::VirtualFPUException(const string & msg) : msg(msg) {
 
     }
 
@@ -195,13 +267,12 @@ namespace virtualfpu {
         }
 
     }
-    
-    bool RPNCompiler::isBuiltinFunction(const Instruction& instr) noexcept
-    {
-        return std::find(functionsOp.begin(),functionsOp.end(),instr)!=functionsOp.end();
+
+    bool RPNCompiler::isBuiltinFunction(const Instruction & instr) noexcept {
+        return std::find(functionsOp.begin(), functionsOp.end(), instr) != functionsOp.end();
     }
 
-    int RPNCompiler::getOperatorPrecedence(const Instruction& instr) noexcept {
+    int RPNCompiler::getOperatorPrecedence(const Instruction & instr) noexcept {
 
         switch (instr) {
             case Instruction::VALUE:
@@ -214,15 +285,10 @@ namespace virtualfpu {
                 return 4;
             case Instruction::DIV:
                 return 5;
-            case POW:
+            case Instruction::POW:
                 return 6;
-            case UNARY_MINUS:
+            case Instruction::UNARY_MINUS:
                 return 7;
-            case COS:
-            case SIN:
-            case SQRT:
-                return 10;
-
             default:
                 if (isFunction(instr)) {
                     return 8;
@@ -234,7 +300,7 @@ namespace virtualfpu {
 
     }
 
-    RPNCompiler& RPNCompiler::compile(const string& statement) {
+    RPNCompiler & RPNCompiler::compile(const string & statement) {
 
         const string err = "Syntax error:";
 
@@ -247,13 +313,13 @@ namespace virtualfpu {
 
         const int lu = statement.length();
 
-     /**   const int TK_NIL = 0;
-        const int TK_NUM = 1;
-        const int TK_OPERATOR = 2;
-        const int TK_FUNCTION = 3;
-        const int TK_OPEN_BRK = 4;
-        const int TK_CLOSE_BRK = 5;
-        const int TK_OTHER = 255;*/
+        /**   const int TK_NIL = 0;
+           const int TK_NUM = 1;
+           const int TK_OPERATOR = 2;
+           const int TK_FUNCTION = 3;
+           const int TK_OPEN_BRK = 4;
+           const int TK_CLOSE_BRK = 5;
+           const int TK_OTHER = 255;*/
 
         if (lu == 0) {
             throwError(err + "expression is empty");
@@ -390,12 +456,10 @@ namespace virtualfpu {
                     }
 
                 } else {
-
                     if (opItem->instr == Instruction::SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
                         //se lo stack è vuoto ed è un meno allora è un meno unario
                         opItem->instr = Instruction::UNARY_MINUS;
                     }
-
                 }
 
                 temp.push(opItem);
@@ -409,6 +473,7 @@ namespace virtualfpu {
                 last = TK_OPERATOR;
 
             } else if (isFunction(token)) {
+
                 if (last == TK_FUNCTION) {
 
                     ostringstream ss;
@@ -419,52 +484,24 @@ namespace virtualfpu {
                 }
 
                 if (last == TK_NUM) {
-                    addImpliedMul(temp,last);
-                    last=TK_OPERATOR;
+                    addImpliedMul(temp, last);
+                    last = TK_OPERATOR;
                 }
 
 
                 StackItem *opItem = new StackItem();
                 opItem->fromString(token);
 
-//                if (!temp.empty()) {
-//
-//                    for (;;) {
-//
-//                        //gestione precedenza operatori
-//                        StackItem* topOp = temp.top();
-//
-//                        if (topOp->instr == PAR_OPEN) {
-//                            break;
-//                        }
-//
-//                        if (getOperatorPrecedence(topOp->instr) > getOperatorPrecedence(opItem->instr)) {
-//
-//                            instrVector->push_back(topOp);
-//                            temp.pop();
-//
-//                        } else {
-//                            break;
-//                        }
-//
-//                        if (temp.empty()) break;
-//                    }
-//
-//                }
-//
-//                temp.push(opItem);
-                
-                addItemToTempStack(opItem,temp,last);               
-             
+                addItemToTempStack(opItem, temp, last);
 
                 last = TK_FUNCTION;
 
 
             } else if (isVarDefined(token)) {
-                
+
                 if (last == TK_NUM) {
-                    addImpliedMul(temp,last);
-                    last=TK_OPERATOR;
+                    addImpliedMul(temp, last);
+                    last = TK_OPERATOR;
                 }
 
                 //variable defined in the lookup table
@@ -475,7 +512,7 @@ namespace virtualfpu {
                 s->defVar = token;
                 instrVector->push_back(s);
 
-             
+
                 last = TK_NUM;
 
             } else {
@@ -506,11 +543,11 @@ namespace virtualfpu {
     }
 
     void RPNCompiler::addItemToTempStack(StackItem *opItem, stack<StackItem*> &temp, const int last) {
-        
+
         if (!temp.empty()) {
 
-            if (opItem->instr == SUB && (temp.top()->instr == PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM && last != TK_CLOSE_BRK) {
-                opItem->instr = UNARY_MINUS;
+            if (opItem->instr == Instruction::SUB && (temp.top()->instr == Instruction::PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM && last != TK_CLOSE_BRK) {
+                opItem->instr = Instruction::UNARY_MINUS;
             }
 
             for (;;) {
@@ -518,7 +555,7 @@ namespace virtualfpu {
                 //gestione precedenza operatori
                 StackItem* topOp = temp.top();
 
-                if (topOp->instr == PAR_OPEN) {
+                if (topOp->instr == Instruction::PAR_OPEN) {
                     break;
                 }
 
@@ -536,9 +573,9 @@ namespace virtualfpu {
 
         } else {
 
-            if (opItem->instr == SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
+            if (opItem->instr == Instruction::SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
                 //se lo stack è vuoto ed è un meno allora è un meno unario
-                opItem->instr = UNARY_MINUS;
+                opItem->instr = Instruction::UNARY_MINUS;
             }
 
         }
@@ -547,21 +584,20 @@ namespace virtualfpu {
 
     }
 
-    void RPNCompiler::addImpliedMul(stack<StackItem*> &temp,const int last) {
+    void RPNCompiler::addImpliedMul(stack<StackItem*> &temp, const int last) {
         StackItem *mulItem = new StackItem();
-        mulItem->instr = MUL;
+        mulItem->instr = Instruction::MUL;
         mulItem->value = 0;
         mulItem->defVar = "";
-        addItemToTempStack(mulItem,temp,last);    
+        addItemToTempStack(mulItem, temp, last);
 
     }
-    
 
-    const string& RPNCompiler::getLastCompiledStatement() {
+    const string & RPNCompiler::getLastCompiledStatement() {
         return last_compiled_statement;
     }
 
-    bool RPNCompiler::isOperator(const string& token) {
+    bool RPNCompiler::isOperator(const string & token) {
 
         StackItem item;
 
@@ -574,10 +610,10 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::isOperator(const Instruction instr) {
-        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS || instr == POW;
+        return instr == Instruction::MUL || instr == Instruction::DIV || instr == Instruction::SUB || instr == Instruction::ADD || instr == Instruction::UNARY_MINUS || instr == Instruction::POW;
     }
 
-    bool RPNCompiler::isFunction(const string& token) {
+    bool RPNCompiler::isFunction(const string & token) {
 
         StackItem item;
 
@@ -590,11 +626,11 @@ namespace virtualfpu {
 
     }
 
-    bool RPNCompiler::isFunction(const Instruction& instr) {
+    bool RPNCompiler::isFunction(const Instruction & instr) {
         return RPNCompiler::isBuiltinFunction(instr);
     }
 
-    bool RPNCompiler::isNumber(const string& token) {
+    bool RPNCompiler::isNumber(const string & token) {
 
         int idx = 0;
         const int lu = token.length();
@@ -649,7 +685,7 @@ namespace virtualfpu {
 
     }
 
-    double RPNCompiler::toDouble(const string& token) {
+    double RPNCompiler::toDouble(const string & token) {
         double r = 0;
 
         istringstream ss(token);
@@ -720,15 +756,13 @@ namespace virtualfpu {
                 state = 1;
                 ss << ch;
                 ++idx;
-            }
-            else if (isdigit(ch)) {
+            } else if (isdigit(ch)) {
                 last_num = true;
                 last_alpha = false;
                 state = 1;
                 ss << ch;
                 ++idx;
-            }
-            else {
+            } else {
 
                 last_num = false;
                 last_alpha = false;
@@ -746,6 +780,7 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::reduceStack(std::vector<StackItem*> &stack) {
+
         auto lu = stack.size();
         if (lu > 0) {
             int i = lu - 1;
@@ -759,31 +794,6 @@ namespace virtualfpu {
                 if (op1->instr != Instruction::VALUE) {
                     throwError("Invalid stack:found operation without operand.");
                 }
-                switch (item->instr) {
-                    case UNARY_MINUS:
-                    case COS:
-                    case SIN:
-                    case SQRT:
-                        evaluateUnary(op1, item);
-                        op1->defVar = ""s;
-                        delete stack[lu - 1];
-                        stack.pop_back();
-                        return true;
-                    case ADD:
-                    case SUB:
-                    case DIV:
-                    case MUL:
-                    case POW:
-                    {
-                        --i;
-                        if (i < 0) {
-                            throwError("Invalid stack:missing second operand");
-                        }
-                        StackItem *op2 = stack[i];
-                        if (op2->instr != VALUE) {
-                            throwError("Invalid stack:value expected.");
-                        }
-
                 if (isFunction(item->instr) || item->instr == Instruction::UNARY_MINUS) {
 
                     evaluateUnary(op1, item);
@@ -800,6 +810,7 @@ namespace virtualfpu {
                         case Instruction::SUB:
                         case Instruction::DIV:
                         case Instruction::MUL:
+                        case Instruction::POW:
                         {
                             --i;
                             if (i < 0) {
@@ -821,13 +832,16 @@ namespace virtualfpu {
                             return true;
                         default:
                             throwError("Unhandled instruction");
+                            return false;
                             break;
                     }
                 }
             }
         }
+
         return false;
-    }
+
+    }//end reduceStack
 
     double RPNCompiler::evaluate() {
 
@@ -864,57 +878,39 @@ namespace virtualfpu {
         }
     }
 
-    StackItem* RPNCompiler::evaluateUnary(StackItem *operand, StackItem *operation) {
-
-        const double val = getValue(operand);
-
-        switch (operation->instr) {
-            case Instruction::UNARY_MINUS:
-                operand->value = -val;
-                break;
-            case Instruction::SIN:
-                operand->value = sin(val);
-                break;
-            case Instruction::COS:
-                operand->value = cos(val);
-                break;
-            case Instruction::TAN:
-                operand->value = tan(val);
-                break;
-            case Instruction::SQRT:
-                operand->value = sqrt(val);
-                break;
-            default:
-                throwError("Unsupported function");
+    StackItem * RPNCompiler::evaluateUnary(StackItem *operand, StackItem * operation) {
+        std::function<double(double) > fn = oneArgFunctions[operation->instr];
+        if (!fn) {
+            throwError("Cannot find the built-in one arg function "s + symToStr[operation->instr]);
+            return nullptr;
         }
-
+        operand->value=fn(getValue(operand));
+        operand->defVar="";
         return operand;
-
     }
 
-    double RPNCompiler::getValue(StackItem *operand) {
+    double RPNCompiler::getValue(StackItem * operand) {
         return operand->defVar.empty() ? operand->value : getVar(operand->defVar);
     }
 
-    double RPNCompiler::evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation) {
-                        
+    double RPNCompiler::evaluateOperation(StackItem *op1, StackItem *op2, StackItem * operation) {
 
         switch (operation->instr) {
             case Instruction::ADD:
                 return getValue(op1) + getValue(op2);
-            case SUB:
-            case UNARY_MINUS:
+            case Instruction::SUB:
+            case Instruction::UNARY_MINUS:
 
                 return getValue(op1) - getValue(op2);
 
-            case MUL:
+            case Instruction::MUL:
 
                 return getValue(op1) * getValue(op2);
 
                 break;
-            case DIV:
+            case Instruction::DIV:
                 return getValue(op1) / getValue(op2);
-            case POW:
+            case Instruction::POW:
                 return pow(getValue(op1), getValue(op2));
             default:
                 throwError("Unsupported function for two operands");
@@ -992,18 +988,18 @@ namespace virtualfpu {
         (*defVars)[name] = value;
     }
 
-    void RPNCompiler::undefVar(const string &name) {
+    void RPNCompiler::undefVar(const string & name) {
 
         if (defVars->find(name) != defVars->end()) {
             defVars->erase(name);
         }
     }
 
-    bool RPNCompiler::isVarDefined(const string &name) {
+    bool RPNCompiler::isVarDefined(const string & name) {
         return defVars->find(name) != defVars->end();
     }
 
-    double RPNCompiler::getVar(const string &varName) {
+    double RPNCompiler::getVar(const string & varName) {
 
         if (!defVars->count(varName)) {
             throwError(string("Variabile ") + varName + string(" is not defined!"));
@@ -1031,7 +1027,7 @@ namespace virtualfpu {
 
     }
 
-    void RPNCompiler::throwError(const string &msg) {
+    void RPNCompiler::throwError(const string & msg) {
         stringstream ss;
         ss << msg << " expr:" << last_compiled_statement;
         throw VirtualFPUException(ss.str());

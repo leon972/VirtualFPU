@@ -49,7 +49,7 @@ namespace virtualfpu {
      * Available operators and functions
      */
     enum class Instruction {
-        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, SQRT, SIN, COS, TAN, ASIN, ACOS, ATAN, ABS, EXP, LOG, LOG10, LOG2, SINH, COSH, TANH, ASINH, ACOSH, ATANH, SIGN
+        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, POW,SQRT, SIN, COS, TAN, ASIN, ACOS, ATAN, ABS, EXP, LOG, LOG10, LOG2, SINH, COSH, TANH, ASINH, ACOSH, ATANH, SIGN
     };
 
     class VirtualFPUException : public std::exception {
