@@ -48,11 +48,11 @@ namespace virtualfpu {
     /**
      * Available operators and functions
      */
-    enum Instruction {
-        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, SQRT, SIN, COS
+    enum class Instruction {
+        VALUE, PAR_OPEN, PAR_CLOSE, UNARY_MINUS, ADD, SUB, MUL, DIV, POW,SQRT, SIN, COS, TAN, ASIN, ACOS, ATAN, ABS, EXP, LOG, LOG10, LOG2, SINH, COSH, TANH, ASINH, ACOSH, ATANH, SIGN
     };
 
-    class VirtualFPUException: public std::exception {
+    class VirtualFPUException : public std::exception {
     public:
 
         VirtualFPUException(const string& msg);
@@ -60,8 +60,8 @@ namespace virtualfpu {
         virtual ~VirtualFPUException();
 
         const string getMessage() const;
-        
-        virtual const char * what () const noexcept override;
+
+        virtual const char * what() const noexcept override;
 
     private:
 
@@ -100,10 +100,7 @@ namespace virtualfpu {
         static const size_t DEFAULT_STACK_SIZE = 1024;
 
 
-        /**       
-         * @return a lower value means a lower precedence
-         */
-        static int getOperatorPrecedence(const Instruction& instr) noexcept;
+
 
 
         /**
@@ -201,8 +198,8 @@ namespace virtualfpu {
          * Undefine all custom variables
          */
         void clearAllVariables();
-        
-        
+
+
         const string& getLastCompiledStatement();
 
 
@@ -237,10 +234,25 @@ namespace virtualfpu {
          * @return 
          */
         bool isFunction(const string& token);
-        
+
         bool isFunction(const Instruction& instr);
 
+        /**       
+         * @return a lower value means a lower precedence
+         */
+        int getOperatorPrecedence(const Instruction& instr) noexcept;
+
+        static bool isBuiltinFunction(const Instruction& instr) noexcept;
+
     private:
+        
+        const int TK_NIL = 0;
+        const int TK_NUM = 1;
+        const int TK_OPERATOR = 2;
+        const int TK_FUNCTION = 3;
+        const int TK_OPEN_BRK = 4;
+        const int TK_CLOSE_BRK = 5;
+        const int TK_OTHER = 255;
         
         string last_compiled_statement;
 
@@ -253,6 +265,9 @@ namespace virtualfpu {
         bool reduceStack(std::vector<StackItem*> &stack);
 
         double getValue(StackItem *operand);
+        
+        void addImpliedMul(stack<StackItem*> &temp,const int last);
+         void addItemToTempStack(StackItem *item,stack<StackItem*> &stack,const int last);
         
         void throwError(const string &msg);
 

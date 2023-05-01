@@ -8,9 +8,8 @@
 #include <cstdlib>
 #include <iostream>
 #include "virtualfpu.h"
+#include <cmath>
 
-
-using namespace std;
 using namespace virtualfpu;
 
 /**
@@ -20,18 +19,24 @@ int main(int argc, char** argv) {
 
     try {
 
-        RPNCompiler fpu;
-
+        RPNCompiler fpu;        
+        
         fpu.compile("4*sin(-1.2)+(-1*(8/9+5/6))");
-
-        std::cout << fpu.evaluate() << std::endl; //prints -5.45038
-
+        
+        std::cout<<fpu.evaluate()<<std::endl;   //print -5.45038
+        
+        
+        fpu.defineVar("x", 2);
+    fpu.defineVar("PI", M_PI);
+        
+         fpu.compile("tan(PI/4)+x^2");
+         
+          std::cout<<fpu.evaluate()<<std::endl;
 
     } catch (VirtualFPUException &ex) {
 
-        cerr << ex.getMessage() << endl;
-    }
-    
+        std::cerr << ex.getMessage() << std::endl;
+    }   
 
     return 0;
 
