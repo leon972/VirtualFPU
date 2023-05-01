@@ -66,12 +66,12 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/tests: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/29dd86f/virtualfpu.o: ../../virtualfpu.cpp
 	${MKDIR} -p ${OBJECTDIR}/_ext/29dd86f
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/29dd86f/virtualfpu.o ../../virtualfpu.cpp
+	$(COMPILE.cc) -O2 -s -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/29dd86f/virtualfpu.o ../../virtualfpu.cpp
 
 ${OBJECTDIR}/tests.o: tests.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tests.o tests.cpp
+	$(COMPILE.cc) -O2 -s -I../.. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tests.o tests.cpp
 
 # Subprojects
 .build-subprojects:

@@ -71,6 +71,7 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <stripSymbols>true</stripSymbols>
           <incDir>
             <pElem>../..</pElem>
           </incDir>
