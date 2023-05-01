@@ -49,47 +49,86 @@ using namespace std;
 
 namespace virtualfpu {
 
+    static std::vector<Instruction> functionsOp = {
+        Instruction::ABS, Instruction::ACOS, Instruction::ACOSH, Instruction::ASIN,
+        Instruction::ASINH, Instruction::ATAN, Instruction::ATANH, Instruction::COS,
+        Instruction::COSH, Instruction::EXP,
+        Instruction::LOG, Instruction::LOG10, Instruction::LOG2,
+        Instruction::MUL, Instruction::SIGN, Instruction::SIN,
+        Instruction::SINH, Instruction::SQRT, Instruction::TAN, Instruction::TANH
+    };
+
+    static std::map<Instruction, string> symToStr = {
+        {Instruction::UNARY_MINUS, "[-]"},
+        {Instruction::ADD, "+"},
+        {Instruction::SUB, "-"},
+        {Instruction::MUL, "*"},
+        {Instruction::DIV, "/"},
+        {Instruction::SQRT, "sqrt"},
+        {Instruction::COS, "cos"},
+        {Instruction::SIN, "sin"},
+        {Instruction::TAN, "tan"},
+        {Instruction::ASIN, "asin"},
+        {Instruction::ACOS, "acos"},
+        {Instruction::ATAN, "atan"},
+        {Instruction::ABS, "abs"},
+        {Instruction::EXP, "exp"},
+        {Instruction::LOG, "log"},
+        {Instruction::LOG10, "log10"},
+        {Instruction::LOG2, "log2"},
+        {Instruction::SINH, "sinh"},
+        {Instruction::COSH, "cosh"},
+        {Instruction::TANH, "tanh"},
+        {Instruction::ASINH, "asinh"},
+        {Instruction::ACOSH, "acosh"},
+        {Instruction::ATANH, "atanh"},
+        {Instruction::SIGN, "sign"}
+    };
+
+    static std::map<string, Instruction> strToSymbol = {
+        {"[-]", Instruction::UNARY_MINUS},
+        {"(", Instruction::PAR_OPEN},
+        {")", Instruction::PAR_CLOSE},
+        {"+", Instruction::ADD},
+        {"-", Instruction::SUB},
+        {"*", Instruction::MUL},
+        {"/", Instruction::DIV},
+        {"sqrt", Instruction::SQRT},
+        {"cos", Instruction::COS},
+        {"sin", Instruction::SIN},
+        {"tan", Instruction::TAN},
+        {"asin", Instruction::ASIN},
+        {"acos", Instruction::ACOS},
+        {"atan", Instruction::ATAN},
+        {"abs", Instruction::ABS},
+        {"exp", Instruction::EXP},
+        {"log", Instruction::LOG},
+        {"log10", Instruction::LOG10},
+        {"log2", Instruction::LOG2},
+        {"sinh", Instruction::SINH},
+        {"cosh", Instruction::COSH},
+        {"tanh", Instruction::TANH},
+        {"asinh", Instruction::ASINH},
+        {"acosh", Instruction::ACOSH},
+        {"atanh", Instruction::ATANH},
+        {"sign", Instruction::SIGN}
+
+    };
+
     /////////////////////// StackItem ////////////////////////////////////////////
 
     ostream& operator<<(ostream& ostr, const StackItem& item) {
 
-        switch (item.instr) {
-            case VALUE:
-                if (!item.defVar.empty()) {
-                    ostr << item.defVar;
-                } else {
-                    ostr << item.value;
-                }
-                break;
-            case UNARY_MINUS:
-                ostr << "[-]";
-                break;
-            case ADD:
-                ostr << "+";
-                break;
-            case SUB:
-                ostr << "-";
-                break;
-            case MUL:
-                ostr << "*";
-                break;
-            case DIV:
-                ostr << "/";
-                break;
-            case SQRT:
-                ostr << "sqrt";
-                break;
-            case COS:
-                ostr << "cos";
-                break;
-            case SIN:
-                ostr << "sin";
-                break;
-
-            default:
-                ostr << "???";
-                break;
-
+        if (item.instr == Instruction::VALUE) {
+            if (!item.defVar.empty()) {
+                ostr << item.defVar;
+            } else {
+                ostr << item.value;
+            }
+        } else if (symToStr.contains(item.instr)) {
+            ostr << symToStr[item.instr];
+        } else {
+            ostr << "<?>";
         }
 
         return ostr;
@@ -98,24 +137,9 @@ namespace virtualfpu {
 
     void StackItem::fromString(const string& opstr) {
 
-        if (opstr == "+") {
-            instr = ADD;
-        } else if (opstr == "-") {
-            instr = SUB;
-        } else if (opstr == "/") {
-            instr = DIV;
-        } else if (opstr == "*") {
-            instr = MUL;
-        } else if (opstr == "cos") {
-            instr = COS;
-        } else if (opstr == "sin") {
-            instr = SIN;
-        } else if (opstr == "sqrt") {
-            instr = SQRT;
-        } else if (opstr == "(") {
-            instr = PAR_OPEN;
-        } else if (opstr == ")") {
-            instr = PAR_CLOSE;
+        if (strToSymbol.contains(opstr)) {
+            instr = strToSymbol[opstr];
+
         } else {
             throw VirtualFPUException(opstr + ": invalid operator or function.");
         }
@@ -171,29 +195,33 @@ namespace virtualfpu {
         }
 
     }
+    
+    bool RPNCompiler::isBuiltinFunction(const Instruction& instr) noexcept
+    {
+        return std::find(functionsOp.begin(),functionsOp.end(),instr)!=functionsOp.end();
+    }
 
     int RPNCompiler::getOperatorPrecedence(const Instruction& instr) noexcept {
 
         switch (instr) {
-            case VALUE:
+            case Instruction::VALUE:
                 return 0;
-            case ADD:
+            case Instruction::ADD:
                 return 2;
-            case SUB:
+            case Instruction::SUB:
                 return 3;
-            case MUL:
+            case Instruction::MUL:
                 return 4;
-            case DIV:
+            case Instruction::DIV:
                 return 5;
-            case UNARY_MINUS:
+            case Instruction::UNARY_MINUS:
                 return 6;
-            case COS:
-            case SIN:
-            case SQRT:
-                return 8;
-
             default:
-                return -1;
+                if (isFunction(instr)) {
+                    return 8;
+                } else {
+                    return -1;
+                }
 
         }
 
@@ -249,7 +277,7 @@ namespace virtualfpu {
 
                 StackItem *s = new StackItem();
 
-                s->instr = VALUE;
+                s->instr = Instruction::VALUE;
                 s->value = toDouble(token);
 
                 last = TK_NUM;
@@ -267,7 +295,7 @@ namespace virtualfpu {
                 last = TK_OPEN_BRK;
 
                 StackItem *s = new StackItem();
-                s->instr = PAR_OPEN;
+                s->instr = Instruction::PAR_OPEN;
                 s->value = 0;
 
                 temp.push(s);
@@ -297,7 +325,7 @@ namespace virtualfpu {
 
                         StackItem *s = temp.top();
 
-                        if (s->instr == PAR_OPEN) {
+                        if (s->instr == Instruction::PAR_OPEN) {
                             matchingParFound = true;
                             temp.pop();
                             //  if (!temp.empty() && isFunction(temp.top()->instr)) {
@@ -340,8 +368,8 @@ namespace virtualfpu {
 
                 if (!temp.empty()) {
 
-                    if (opItem->instr == SUB && (temp.top()->instr == PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM && last != TK_CLOSE_BRK) {
-                        opItem->instr = UNARY_MINUS;
+                    if (opItem->instr == Instruction::SUB && (temp.top()->instr == Instruction::PAR_OPEN || isOperator(temp.top()->instr)) && last != TK_NUM && last != TK_CLOSE_BRK) {
+                        opItem->instr = Instruction::UNARY_MINUS;
                     }
 
                     for (;;) {
@@ -349,7 +377,7 @@ namespace virtualfpu {
                         //gestione precedenza operatori
                         StackItem* topOp = temp.top();
 
-                        if (topOp->instr == PAR_OPEN) {
+                        if (topOp->instr == Instruction::PAR_OPEN) {
                             break;
                         }
 
@@ -367,16 +395,16 @@ namespace virtualfpu {
 
                 } else {
 
-                    if (opItem->instr == SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
+                    if (opItem->instr == Instruction::SUB && last != TK_NUM && last != TK_CLOSE_BRK) {
                         //se lo stack è vuoto ed è un meno allora è un meno unario
-                        opItem->instr = UNARY_MINUS;
+                        opItem->instr = Instruction::UNARY_MINUS;
                     }
 
                 }
 
                 temp.push(opItem);
 
-                if ((last == TK_OPEN_BRK || last == TK_NIL) && opItem->instr != UNARY_MINUS) {
+                if ((last == TK_OPEN_BRK || last == TK_NIL) && opItem->instr != Instruction::UNARY_MINUS) {
                     ostringstream ss;
                     ss << "Unexpected operator " << token << " at index " << idx;
                     throwError(ss.str());
@@ -405,7 +433,7 @@ namespace virtualfpu {
                         //gestione precedenza operatori
                         StackItem* topOp = temp.top();
 
-                        if (topOp->instr == PAR_OPEN) {
+                        if (topOp->instr == Instruction::PAR_OPEN) {
                             break;
                         }
 
@@ -434,7 +462,7 @@ namespace virtualfpu {
                 //variable defined in the lookup table
 
                 StackItem *s = new StackItem();
-                s->instr = VALUE;
+                s->instr = Instruction::VALUE;
                 s->value = getVar(token);
                 s->defVar = token;
                 instrVector->push_back(s);
@@ -456,7 +484,7 @@ namespace virtualfpu {
 
             StackItem *item = temp.top();
 
-            if (item->instr == PAR_OPEN) {
+            if (item->instr == Instruction::PAR_OPEN) {
                 throwError("Unclosed bracket found in expression.");
             }
 
@@ -484,7 +512,7 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::isOperator(const Instruction instr) {
-        return instr == MUL || instr == DIV || instr == SUB || instr == ADD || instr == UNARY_MINUS;
+        return instr == Instruction::MUL || instr == Instruction::DIV || instr == Instruction::SUB || instr == Instruction::ADD || instr == Instruction::UNARY_MINUS;
     }
 
     bool RPNCompiler::isFunction(const string& token) {
@@ -501,7 +529,7 @@ namespace virtualfpu {
     }
 
     bool RPNCompiler::isFunction(const Instruction& instr) {
-        return instr == SIN || instr == COS || instr == SQRT;
+        return RPNCompiler::isBuiltinFunction(instr);
     }
 
     bool RPNCompiler::isNumber(const string& token) {
@@ -631,51 +659,55 @@ namespace virtualfpu {
         if (lu > 0) {
             int i = lu - 1;
             StackItem *item = stack[i];
-            if (item->instr != VALUE) {
+            if (item->instr != Instruction::VALUE) {
                 --i;
                 if (i < 0) {
                     throwError("Invalid stack:found operation without operand.Reached end of stack");
                 }
                 StackItem *op1 = stack[i];
-                if (op1->instr != VALUE) {
+                if (op1->instr != Instruction::VALUE) {
                     throwError("Invalid stack:found operation without operand.");
                 }
-                switch (item->instr) {
-                    case UNARY_MINUS:
-                    case COS:
-                    case SIN:
-                    case SQRT:
-                        evaluateUnary(op1, item);
-                        op1->defVar = ""s;
-                        delete stack[lu - 1];
-                        stack.pop_back();
-                        return true;
-                    case ADD:
-                    case SUB:
-                    case DIV:
-                    case MUL:
-                    {
-                        --i;
-                        if (i < 0) {
-                            throwError("Invalid stack:missing second operand");
-                        }
-                        StackItem *op2 = stack[i];
-                        if (op2->instr != VALUE) {
-                            throwError("Invalid stack:value expected.");
-                        }
 
-                        op2->value = evaluateOperation(op2, op1, item);
-                        op2->defVar = ""s;
+                if (isFunction(item->instr) || item->instr == Instruction::UNARY_MINUS) {
 
-                        delete stack[lu - 1];
-                        delete stack[lu - 2];
-                        stack.pop_back();
-                        stack.pop_back();
+                    evaluateUnary(op1, item);
+                    op1->defVar = ""s;
+                    delete stack[lu - 1];
+                    stack.pop_back();
+                    return true;
+
+                } else {
+
+                    switch (item->instr) {
+
+                        case Instruction::ADD:
+                        case Instruction::SUB:
+                        case Instruction::DIV:
+                        case Instruction::MUL:
+                        {
+                            --i;
+                            if (i < 0) {
+                                throwError("Invalid stack:missing second operand");
+                            }
+                            StackItem *op2 = stack[i];
+                            if (op2->instr != Instruction::VALUE) {
+                                throwError("Invalid stack:value expected.");
+                            }
+
+                            op2->value = evaluateOperation(op2, op1, item);
+                            op2->defVar = ""s;
+
+                            delete stack[lu - 1];
+                            delete stack[lu - 2];
+                            stack.pop_back();
+                            stack.pop_back();
+                        }
+                            return true;
+                        default:
+                            throwError("Unhandled instruction");
+                            break;
                     }
-                        return true;
-                    default:
-                        throwError("Unhandled instruction");
-                        break;
                 }
             }
         }
@@ -699,7 +731,7 @@ namespace virtualfpu {
                 }
             }
 
-            if (executeStack.size() == 1 && executeStack[0]->instr == VALUE) {
+            if (executeStack.size() == 1 && executeStack[0]->instr == Instruction::VALUE) {
 
                 double r = executeStack[0]->value;
                 delete executeStack[0];
@@ -719,18 +751,23 @@ namespace virtualfpu {
 
     StackItem* RPNCompiler::evaluateUnary(StackItem *operand, StackItem *operation) {
 
+        const double val = getValue(operand);
+
         switch (operation->instr) {
-            case UNARY_MINUS:
-                operand->value = -getValue(operand);
+            case Instruction::UNARY_MINUS:
+                operand->value = -val;
                 break;
-            case SIN:
-                operand->value = sin(getValue(operand));
+            case Instruction::SIN:
+                operand->value = sin(val);
                 break;
-            case COS:
-                operand->value = cos(getValue(operand));
+            case Instruction::COS:
+                operand->value = cos(val);
                 break;
-            case SQRT:
-                operand->value = sqrt(getValue(operand));
+            case Instruction::TAN:
+                operand->value = tan(val);
+                break;
+            case Instruction::SQRT:
+                operand->value = sqrt(val);
                 break;
             default:
                 throwError("Unsupported function");
@@ -745,19 +782,20 @@ namespace virtualfpu {
     }
 
     double RPNCompiler::evaluateOperation(StackItem *op1, StackItem *op2, StackItem *operation) {
+                        
 
         switch (operation->instr) {
-            case ADD:
+            case Instruction::ADD:
                 return getValue(op1) + getValue(op2);
             case SUB:
             case UNARY_MINUS:
-                                           
+
                 return getValue(op1) - getValue(op2);
 
-            case MUL:            
-                      
+            case MUL:
+
                 return getValue(op1) * getValue(op2);
-            
+
                 break;
             case DIV:
                 return getValue(op1) / getValue(op2);
