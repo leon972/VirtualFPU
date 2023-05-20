@@ -11,6 +11,7 @@
         <group name="TestProjects">
             <file>file:/home/leonardo/projects/cpp/VirtualFPU/main.cpp</file>
             <file>file:/home/leonardo/projects/cpp/VirtualFPU/virtualfpu.cpp</file>
+            <file>file:/home/leonardo/projects/cpp/VirtualFPU/virtualfpu.h</file>
         </group>
     </open-files>
 </project-private>
