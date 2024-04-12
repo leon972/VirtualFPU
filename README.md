@@ -1,7 +1,7 @@
 # VirtualFPU
 
-This is plain standard C++20 self contained mathematical expression compiler and evaluator.
-Internally uses a RPN (Reverse Polish Notation) stack to evalute the expression.
+This is a C++ self-contained mathematical expression compiler and evaluator.
+Internally uses an RPN (Reverse Polish Notation) stack to evaluate the expression.
 
 # Usage example:
 
@@ -21,9 +21,9 @@ All values are treated as C++ double (no template supported yet!)
 - available operators:
   \+ addition, - subtraction, * multiplication, / division, - unary minus, ^ power
 - available built-in functions
-  sin,cos,tan,asin,acos,atan,sinh,cosh,acosh,atanh,exp (base-e exponential function),log (natural logarithm), log10 (base 10 loh),log2 (base 2 log),sign (signum)  
+  sin, cos, tan, asin, acos,atan,sinh, cosh, acosh, atanh,exp (base-e exponential function),log (natural logarithm), log10 (base 10 loh),log2 (base 2 log),sign (signum)  
   
-- custom defined variables
+- custom-defined variables
   Define one or more variables and use in the expression:
   
 ```
@@ -43,8 +43,8 @@ All values are treated as C++ double (no template supported yet!)
 
 ```
 
-- custom defined functions
- Define any number of custom functions with a single double argument and returning a double:
+- custom-defined functions
+ Define any number of custom functions with a single double argument that return a double:
 
 ```
     
@@ -70,7 +70,7 @@ All values are treated as C++ double (no template supported yet!)
 
 # Include in your program
 
-Warning! A C++20 compliant compiler is required
+Warning! A C++20-compliant compiler is required
 This software has been tested using gcc11
 
 - Add virtualfpu.cpp in your source dir
