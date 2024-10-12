@@ -12,14 +12,13 @@ Internally uses a RPN (Reverse Polish Notation) stack to evalute the expression.
 
 <h3>Usage example:</h3>
 
-<pre>
-  RPNCompiler fpu;        
+<!-- HTML generated using hilite.me --><div style="background: #202020; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #d0d0d0">RPNCompiler</span> <span style="color: #d0d0d0">fpu;</span>        
         
-  fpu.compile("4*sin(-1.2)+(-1*(8/9+5/6))");
+  <span style="color: #d0d0d0">fpu.compile(</span><span style="color: #ed9d13">&quot;4*sin(-1.2)+(-1*(8/9+5/6))&quot;</span><span style="color: #d0d0d0">);</span>
        
-  std::cout<<fpu.evaluate()<<std::endl;   //prints -5.45038
-  
-</pre>
+  <span style="color: #d0d0d0">std::cout&lt;&lt;fpu.evaluate()&lt;&lt;std::endl;</span>   <span style="color: #999999; font-style: italic">//prints -5.45038</span>
+</pre></div>
+
 
 <h3>Features</h3>
 
@@ -33,45 +32,40 @@ All values are treated as C++ double (no template supported yet!)
 - custom defined variables
   Define one or more variables and use in the expression:
   
-<pre>
-    RPNCompiler fpu;      
+<!-- HTML generated using hilite.me --><div style="background: #202020; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">  <span style="color: #d0d0d0">RPNCompiler</span> <span style="color: #d0d0d0">fpu;</span>      
 
-    fpu.defineVar("x", 1.67);
-    fpu.defineVar("PI", M_PI); 
+    <span style="color: #d0d0d0">fpu.defineVar(</span><span style="color: #ed9d13">&quot;x&quot;</span><span style="color: #d0d0d0">,</span> <span style="color: #3677a9">1.67</span><span style="color: #d0d0d0">);</span>
+    <span style="color: #d0d0d0">fpu.defineVar(</span><span style="color: #ed9d13">&quot;PI&quot;</span><span style="color: #d0d0d0">,</span> <span style="color: #d0d0d0">M_PI);</span> 
     
-    fpu.compile("tan(PI/4)+x^2");
+    <span style="color: #d0d0d0">fpu.compile(</span><span style="color: #ed9d13">&quot;tan(PI/4)+x^2&quot;</span><span style="color: #d0d0d0">);</span>
     
-    std::cout<<fpu.evaluate()<<std::endl;   //prints 3.7889
+    <span style="color: #d0d0d0">std::cout&lt;&lt;fpu.evaluate()&lt;&lt;std::endl;</span>   <span style="color: #999999; font-style: italic">//prints 3.7889</span>
     
-    //change the value of x and evaluate without compiling again  
-    fpu.defineVar("x", 2);
+    <span style="color: #999999; font-style: italic">//change the value of x and evaluate without compiling again  </span>
+    <span style="color: #d0d0d0">fpu.defineVar(</span><span style="color: #ed9d13">&quot;x&quot;</span><span style="color: #d0d0d0">,</span> <span style="color: #3677a9">2</span><span style="color: #d0d0d0">);</span>
     
-    std::cout<<fpu.evaluate()<<std::endl;   //now prints 5                     
+    <span style="color: #d0d0d0">std::cout&lt;&lt;fpu.evaluate()&lt;&lt;std::endl;</span>   <span style="color: #999999; font-style: italic">//now prints 5      </span>
+</pre></div>
 
-</pre>
 
 - custom defined functions
  Define any number of custom functions with a single double argument and returning a double:
 
-<pre>
-    
-     RPNCompiler fpu; 
+<!-- HTML generated using hilite.me --><div style="background: #202020; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">    <span style="color: #d0d0d0">RPNCompiler</span> <span style="color: #d0d0d0">fpu;</span> 
 
-     fpu.defineFunction("cube", [](double v) {
-            return v*v*v;
-     });
+     <span style="color: #d0d0d0">fpu.defineFunction(</span><span style="color: #ed9d13">&quot;cube&quot;</span><span style="color: #d0d0d0">,</span> <span style="color: #d0d0d0">[](</span><span style="color: #6ab825; font-weight: bold">double</span> <span style="color: #d0d0d0">v)</span> <span style="color: #d0d0d0">{</span>
+            <span style="color: #6ab825; font-weight: bold">return</span> <span style="color: #d0d0d0">v*v*v;</span>
+     <span style="color: #d0d0d0">});</span>
         
-     fpu.defineFunction("inv", [](double v) {
-            return 1/v;
-     });
+     <span style="color: #d0d0d0">fpu.defineFunction(</span><span style="color: #ed9d13">&quot;inv&quot;</span><span style="color: #d0d0d0">,</span> <span style="color: #d0d0d0">[](</span><span style="color: #6ab825; font-weight: bold">double</span> <span style="color: #d0d0d0">v)</span> <span style="color: #d0d0d0">{</span>
+            <span style="color: #6ab825; font-weight: bold">return</span> <span style="color: #3677a9">1</span><span style="color: #d0d0d0">/v;</span>
+     <span style="color: #d0d0d0">});</span>
 
-     //compile a statement using the custom functions
-     fpu.compile("cube(3)/4+5/cube(2)-1/(1-inv(cube(2)))")
+     <span style="color: #999999; font-style: italic">//compile a statement using the custom functions</span>
+     <span style="color: #d0d0d0">fpu.compile(</span><span style="color: #ed9d13">&quot;cube(3)/4+5/cube(2)-1/(1-inv(cube(2)))&quot;</span><span style="color: #d0d0d0">)</span>
 
-     std::cout<<fpu.evaluate()<<std::endl;
-
-
-</pre>
+     <span style="color: #d0d0d0">std::cout&lt;&lt;fpu.evaluate()&lt;&lt;std::endl;</span>
+</pre></div>
 
 
 
