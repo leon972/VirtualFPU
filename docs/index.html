@@ -1,0 +1,94 @@
+<html>
+	<head>
+		<title>Virtual VPU</title>
+	</head>
+	<body>
+		<h2>VirtualFPU<h2>
+			<h4>
+
+This is plain standard C++20 self contained mathematical expression compiler and evaluator.
+Internally uses a RPN (Reverse Polish Notation) stack to evalute the expression.
+</h4>
+
+<h3>Usage example:</h3>
+
+<pre>
+  RPNCompiler fpu;        
+        
+  fpu.compile("4*sin(-1.2)+(-1*(8/9+5/6))");
+       
+  std::cout<<fpu.evaluate()<<std::endl;   //prints -5.45038
+  
+</pre>
+
+<h3>Features</h3>
+
+All values are treated as C++ double (no template supported yet!)
+
+- available operators:
+  \+ addition, - subtraction, * multiplication, / division, - unary minus, ^ power
+- available built-in functions
+  sin,cos,tan,asin,acos,atan,sinh,cosh,acosh,atanh,exp (base-e exponential function),log (natural logarithm), log10 (base 10 loh),log2 (base 2 log),sign (signum)  
+  
+- custom defined variables
+  Define one or more variables and use in the expression:
+  
+<pre>
+    RPNCompiler fpu;      
+
+    fpu.defineVar("x", 1.67);
+    fpu.defineVar("PI", M_PI); 
+    
+    fpu.compile("tan(PI/4)+x^2");
+    
+    std::cout<<fpu.evaluate()<<std::endl;   //prints 3.7889
+    
+    //change the value of x and evaluate without compiling again  
+    fpu.defineVar("x", 2);
+    
+    std::cout<<fpu.evaluate()<<std::endl;   //now prints 5                     
+
+</pre>
+
+- custom defined functions
+ Define any number of custom functions with a single double argument and returning a double:
+
+<pre>
+    
+     RPNCompiler fpu; 
+
+     fpu.defineFunction("cube", [](double v) {
+            return v*v*v;
+     });
+        
+     fpu.defineFunction("inv", [](double v) {
+            return 1/v;
+     });
+
+     //compile a statement using the custom functions
+     fpu.compile("cube(3)/4+5/cube(2)-1/(1-inv(cube(2)))")
+
+     std::cout<<fpu.evaluate()<<std::endl;
+
+
+</pre>
+
+
+
+<h3>Include in your program</h3>
+
+Warning! A C++20 compliant compiler is required
+This software has been tested using gcc11
+
+- Add virtualfpu.cpp in your source dir
+- Add virtualfpu.h in your headers files
+
+
+
+
+
+  
+  
+
+	</body>
+</html>
