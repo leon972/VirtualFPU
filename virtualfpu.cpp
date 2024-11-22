@@ -45,9 +45,6 @@
 
 
 
-using namespace std;
-
-
 namespace virtualfpu {
 
     static std::vector<Instruction> functionsOp = {
