@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   main.cpp
  * Author: Proprietario
  *
@@ -13,32 +13,36 @@
 using namespace virtualfpu;
 
 /**
- * 
+ *
  */
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
 
-    try {
+    try
+    {
 
-        RPNCompiler fpu;        
-        
+        RPNCompiler fpu;
+
         fpu.compile("4*sin(-1.2)+(-1*(8/9+5/6))");
-        
-        std::cout<<fpu.evaluate()<<std::endl;   //print -5.45038
-        
-        
-        fpu.defineVar("x", 2);
-    fpu.defineVar("PI", M_PI);
-        
-         fpu.compile("tan(PI/4)+x^2");
-         
-          std::cout<<fpu.evaluate()<<std::endl;
 
-    } catch (VirtualFPUException &ex) {
+        std::cout << fpu.evaluate() << std::endl; // print -5.45038
+
+        fpu.defineVar("x", 2);
+        fpu.defineVar("PI", M_PI);
+
+        fpu.compile("tan(PI/4)+x^2");
+
+        std::cout << fpu.evaluate() << std::endl;
+
+        fpu.compile("-1*(1+5/6-2+3-7/8/9/10-11)*2*(-(3+2)/(-9-3))");
+
+        std::cout << fpu.evaluate() << std::endl;
+    }
+    catch (VirtualFPUException &ex)
+    {
 
         std::cerr << ex.getMessage() << std::endl;
-    }   
+    }
 
     return 0;
-
 }
-

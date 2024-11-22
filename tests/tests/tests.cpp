@@ -213,9 +213,12 @@ int main(int argc, char** argv) {
 
         cout << "TESTS SUCCESS!" << endl;
 
+        return 0;
+
 
     } catch (std::exception &e) {
         tests::print_fail(string(e.what()));
+        return 1;
     }
 }
 
